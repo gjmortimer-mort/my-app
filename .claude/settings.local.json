@@ -45,7 +45,8 @@
       "Bash(dig @ns1.siteground.net mortimerfamily.com TXT +short)",
       "Bash(curl -s -o /dev/null -w 'status=%{http_code}  redirects-to=%{redirect_url}\\\\n' --max-time 15 http://worldcup.mortimerfamily.com/)",
       "Bash(python3 -c 'import sys,json; e=json.load\\(sys.stdin\\)['\\\\''events'\\\\'']; *)",
-      "Bash(python3 -)"
+      "Bash(python3 -)",
+      "Bash(python3 -c \"import sys,json; j=json.load\\(sys.stdin\\); print\\('utc_offset_seconds:',j.get\\('utc_offset_seconds'\\)\\); print\\('timezone:',j.get\\('timezone'\\)\\); print\\('current:',j.get\\('current'\\)\\)\")"
     ]
   }
 }

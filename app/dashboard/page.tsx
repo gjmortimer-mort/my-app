@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 const GEO_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
+const FAVORITES_KEY = "tempdash.favorites.v1";
 
 const CONDITIONS: Record<number, string> = {
   0: "Clear sky",
@@ -21,22 +22,76 @@ const CONDITIONS: Record<number, string> = {
   95: "Thunderstorm",
 };
 
-type CityWeather = {
-  id: string;
-  city: string;
+type Identity = {
+  id: string; // "lat,lon"
+  name: string;
   region: string;
+  countryCode: string; // lowercase ISO-2, e.g. "au"
+  latitude: number;
+  longitude: number;
+};
+
+type CityWeather = Identity & {
   tempF: number;
   windMph: number;
   condition: string;
+  utcOffsetSeconds: number;
 };
 
 type Unit = "F" | "C";
 
+type GeoResp = {
+  results?: Array<{
+    name: string;
+    latitude: number;
+    longitude: number;
+    admin1?: string;
+    country?: string;
+    country_code?: string;
+  }>;
+};
+
+type WxResp = {
+  current: { temperature_2m: number; wind_speed_10m: number; weather_code: number };
+  utc_offset_seconds: number;
+};
+
+// ---- Data --------------------------------------------------------------
+async function geocode(name: string): Promise<Identity | null> {
+  const res = await fetch(`${GEO_URL}?name=${encodeURIComponent(name)}&count=1`);
+  const geo = (await res.json()) as GeoResp;
+  const p = geo.results?.[0];
+  if (!p) return null;
+  return {
+    id: `${p.latitude},${p.longitude}`,
+    name: p.name,
+    region: p.admin1 ?? p.country ?? "",
+    countryCode: (p.country_code ?? "").toLowerCase(),
+    latitude: p.latitude,
+    longitude: p.longitude,
+  };
+}
+
+async function fetchWeather(lat: number, lon: number) {
+  const res = await fetch(
+    `${WEATHER_URL}?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,wind_speed_10m,weather_code` +
+      `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`,
+  );
+  const wx = (await res.json()) as WxResp;
+  return {
+    tempF: Math.round(wx.current.temperature_2m),
+    windMph: Math.round(wx.current.wind_speed_10m),
+    condition: CONDITIONS[wx.current.weather_code] ?? "Unknown",
+    utcOffsetSeconds: wx.utc_offset_seconds ?? 0,
+  };
+}
+
 // ---- Gauge geometry ----------------------------------------------------
 const MIN_F = -10;
 const MAX_F = 110;
-const SWEEP = 240;
-const REDLINE_F = 90;
+const SWEEP = 270;
+const R = 74;
 
 function polar(angle: number, r: number): [number, number] {
   const rad = (angle * Math.PI) / 180;
@@ -59,114 +114,149 @@ function toUnit(tempF: number, unit: Unit) {
   return unit === "F" ? tempF : Math.round(((tempF - 32) * 5) / 9);
 }
 
-// ---- One gauge ---------------------------------------------------------
-function Gauge({
+function tempColor(f: number) {
+  if (f < 32) return "#38bdf8";
+  if (f < 50) return "#22d3ee";
+  if (f < 68) return "#34d399";
+  if (f < 80) return "#fbbf24";
+  if (f < 90) return "#fb923c";
+  return "#f43f5e";
+}
+
+// ---- Local clock for a city -------------------------------------------
+function cityClock(now: number | null, utcOffsetSeconds: number) {
+  if (now == null) return "--:--";
+  const d = new Date(now + utcOffsetSeconds * 1000);
+  let h = d.getUTCHours();
+  const m = d.getUTCMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+// ---- One gauge card ----------------------------------------------------
+function GaugeCard({
   data,
   unit,
+  now,
+  isFavorite,
+  onToggleFavorite,
   onRemove,
 }: {
   data: CityWeather;
   unit: Unit;
+  now: number | null;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
   onRemove: () => void;
 }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const angle = tempToAngle(data.tempF);
-  const inRedline = data.tempF >= REDLINE_F;
-
-  const ticks = [];
-  for (let t = MIN_F; t <= MAX_F; t += 12) ticks.push(t);
+  const color = tempColor(data.tempF);
+  const [tipX, tipY] = polar(angle, R);
 
   return (
-    <div className="relative rounded-2xl border border-slate-800 bg-slate-900 p-4 flex flex-col items-center">
-      <button
-        onClick={onRemove}
-        aria-label={`Remove ${data.city}`}
-        className="absolute top-2 right-3 text-slate-600 hover:text-rose-400 text-lg"
-      >
-        ×
-      </button>
+    <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4 shadow-lg ring-1 ring-white/5">
+      {/* header: favorite (left) · local clock + remove (right) */}
+      <div className="mb-1 flex items-center justify-between">
+        <button
+          onClick={onToggleFavorite}
+          aria-label={isFavorite ? `Unfavorite ${data.name}` : `Favorite ${data.name}`}
+          aria-pressed={isFavorite}
+          className={`text-lg transition-colors ${
+            isFavorite ? "text-amber-400" : "text-slate-600 hover:text-amber-300"
+          }`}
+        >
+          {isFavorite ? "★" : "☆"}
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="rounded-md bg-slate-800/70 px-2 py-0.5 font-mono text-xs tabular-nums text-slate-300">
+            {cityClock(now, data.utcOffsetSeconds)}
+          </span>
+          <button
+            onClick={onRemove}
+            aria-label={`Remove ${data.name}`}
+            className="text-lg leading-none text-slate-600 hover:text-rose-400"
+          >
+            ×
+          </button>
+        </div>
+      </div>
 
-      <svg viewBox="0 0 200 150" className="w-full max-w-[220px]">
+      <svg viewBox="0 0 200 160" className="w-full max-w-[240px] mx-auto">
+        <defs>
+          <linearGradient id={`g${uid}`} gradientUnits="userSpaceOnUse" x1="26" y1="170" x2="174" y2="30">
+            <stop offset="0%" stopColor="#38bdf8" />
+            <stop offset="40%" stopColor="#34d399" />
+            <stop offset="70%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#f43f5e" />
+          </linearGradient>
+          <filter id={`glow${uid}`} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3.2" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* track */}
         <path
-          d={arcPath(-SWEEP / 2, SWEEP / 2, 70)}
+          d={arcPath(-SWEEP / 2, SWEEP / 2, R)}
           fill="none"
           stroke="#1e293b"
           strokeWidth="12"
           strokeLinecap="round"
         />
+        {/* progress */}
         <path
-          d={arcPath(tempToAngle(REDLINE_F), SWEEP / 2, 70)}
+          d={arcPath(-SWEEP / 2, angle, R)}
           fill="none"
-          stroke="#e11d48"
+          stroke={`url(#g${uid})`}
           strokeWidth="12"
           strokeLinecap="round"
-          opacity="0.85"
+          filter={`url(#glow${uid})`}
+          style={{ transition: "all 0.9s cubic-bezier(.3,1.1,.5,1)" }}
         />
-        {ticks.map((t) => {
-          const a = tempToAngle(t);
-          const [x1, y1] = polar(a, 56);
-          const [x2, y2] = polar(a, 62);
-          return (
-            <line
-              key={t}
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke="#475569"
-              strokeWidth="2"
-            />
-          );
-        })}
-        {[MIN_F, (MIN_F + MAX_F) / 2, MAX_F].map((t) => {
-          const [x, y] = polar(tempToAngle(t), 44);
-          return (
-            <text
-              key={t}
-              x={x}
-              y={y + 3}
-              textAnchor="middle"
-              fontSize="9"
-              fill="#64748b"
-            >
-              {toUnit(t, unit)}°
-            </text>
-          );
-        })}
-        <g
-          style={{
-            transform: `rotate(${angle}deg)`,
-            transformOrigin: "100px 100px",
-            transition: "transform 0.9s cubic-bezier(.3,1.4,.5,1)",
-          }}
-        >
-          <line
-            x1="100"
-            y1="100"
-            x2="100"
-            y2="38"
-            stroke={inRedline ? "#e11d48" : "#38bdf8"}
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        </g>
-        <circle cx="100" cy="100" r="6" fill="#0f172a" stroke="#475569" strokeWidth="2" />
-        <text
-          x="100"
-          y="132"
-          textAnchor="middle"
-          fontSize="22"
-          fontWeight="700"
-          fill={inRedline ? "#fb7185" : "#f1f5f9"}
-        >
-          {toUnit(data.tempF, unit)}°{unit}
+        {/* glowing tip */}
+        <circle cx={tipX} cy={tipY} r="6" fill={color} filter={`url(#glow${uid})`}
+          style={{ transition: "all 0.9s cubic-bezier(.3,1.1,.5,1)" }} />
+        <circle cx={tipX} cy={tipY} r="2.5" fill="#0b1220"
+          style={{ transition: "all 0.9s cubic-bezier(.3,1.1,.5,1)" }} />
+
+        {/* center readout */}
+        <text x="100" y="96" textAnchor="middle" fontSize="40" fontWeight="800" fill={color}>
+          {toUnit(data.tempF, unit)}°
+        </text>
+        <text x="100" y="118" textAnchor="middle" fontSize="12" fontWeight="600" fill="#64748b">
+          {unit === "F" ? "Fahrenheit" : "Celsius"}
+        </text>
+
+        {/* end labels */}
+        <text x={polar(-SWEEP / 2, R - 16)[0]} y={polar(-SWEEP / 2, R - 16)[1] + 4} textAnchor="middle" fontSize="9" fill="#475569">
+          {toUnit(MIN_F, unit)}°
+        </text>
+        <text x={polar(SWEEP / 2, R - 16)[0]} y={polar(SWEEP / 2, R - 16)[1] + 4} textAnchor="middle" fontSize="9" fill="#475569">
+          {toUnit(MAX_F, unit)}°
         </text>
       </svg>
 
-      <p className="text-white font-medium mt-1">
-        {data.city}
-        {data.region ? `, ${data.region}` : ""}
-      </p>
-      <p className="text-slate-400 text-sm">
+      {/* city + flag */}
+      <div className="mt-1 flex items-center justify-center gap-2">
+        {data.countryCode && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`https://flagcdn.com/w40/${data.countryCode}.png`}
+            alt=""
+            width={22}
+            height={15}
+            className="h-[15px] w-[22px] rounded-sm object-cover ring-1 ring-white/10"
+          />
+        )}
+        <span className="font-semibold text-white">{data.name}</span>
+      </div>
+      <p className="text-center text-sm text-slate-400">
+        {data.region ? `${data.region} · ` : ""}
         {data.condition} · wind {data.windMph} mph
       </p>
     </div>
@@ -176,65 +266,142 @@ function Gauge({
 // ---- The dashboard -----------------------------------------------------
 export default function DashboardPage() {
   const [cities, setCities] = useState<CityWeather[]>([]);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const [unit, setUnit] = useState<Unit>("F");
   const [maxCities, setMaxCities] = useState<number | null>(5);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [now, setNow] = useState<number | null>(null);
+  const loadedRef = useRef(false);
 
-  async function fetchCity(name: string): Promise<CityWeather | null> {
-    const geoRes = await fetch(`${GEO_URL}?name=${encodeURIComponent(name)}&count=1`);
-    const geo = await geoRes.json();
-    if (!geo.results?.length) return null;
-    const place = geo.results[0];
+  const citiesRef = useRef<CityWeather[]>([]);
+  citiesRef.current = cities;
 
-    const wxRes = await fetch(
-      `${WEATHER_URL}?latitude=${place.latitude}&longitude=${place.longitude}` +
-        `&current=temperature_2m,wind_speed_10m,weather_code` +
-        `&temperature_unit=fahrenheit&wind_speed_unit=mph`
-    );
-    const wx = await wxRes.json();
-
-    return {
-      id: `${place.latitude},${place.longitude}`,
-      city: place.name,
-      region: place.admin1 ?? place.country ?? "",
-      tempF: Math.round(wx.current.temperature_2m),
-      windMph: Math.round(wx.current.wind_speed_10m),
-      condition: CONDITIONS[wx.current.weather_code] ?? "Unknown",
-    };
-  }
-
-  async function addCity(name: string) {
-    if (!name.trim()) return;
-    if (maxCities !== null && cities.length >= maxCities) {
-      setError(`Dashboard is full (${maxCities} cities). Remove one or raise the limit.`);
-      return;
-    }
-    setLoading(true);
-    setError("");
-    try {
-      const result = await fetchCity(name);
-      if (!result) {
-        setError(`No city found matching "${name}".`);
-      } else if (cities.some((c) => c.id === result.id)) {
-        setError(`${result.city} is already on the dashboard.`);
-      } else {
-        setCities((prev) => [...prev, result]);
-        setQuery("");
+  const addCity = useCallback(
+    async (name: string, opts?: { favorite?: boolean; silent?: boolean }) => {
+      if (!name.trim()) return;
+      if (!opts?.silent && maxCities !== null && citiesRef.current.length >= maxCities) {
+        setError(`Dashboard is full (${maxCities} cities). Remove one or raise the limit.`);
+        return;
       }
-    } catch {
-      setError("Couldn't fetch weather. Check your connection and try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
+      setLoading(true);
+      setError("");
+      try {
+        const idn = await geocode(name);
+        if (!idn) {
+          setError(`No city found matching "${name}".`);
+          return;
+        }
+        if (citiesRef.current.some((c) => c.id === idn.id)) {
+          setError(`${idn.name} is already on the dashboard.`);
+          return;
+        }
+        const w = await fetchWeather(idn.latitude, idn.longitude);
+        setCities((prev) => [...prev, { ...idn, ...w }]);
+        if (opts?.favorite) setFavorites((prev) => new Set(prev).add(idn.id));
+        setQuery("");
+      } catch {
+        setError("Couldn't fetch weather. Check your connection and try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [maxCities],
+  );
 
-  // Load the default city once, when the page first opens
+  // Restore favorites from localStorage on first load (re-fetch their weather).
   useEffect(() => {
-    addCity("Pittsboro");
+    let stored: Identity[] = [];
+    try {
+      stored = JSON.parse(localStorage.getItem(FAVORITES_KEY) ?? "[]") as Identity[];
+    } catch {
+      stored = [];
+    }
+    (async () => {
+      if (stored.length) {
+        const restored = await Promise.all(
+          stored.map(async (idn) => {
+            try {
+              return { ...idn, ...(await fetchWeather(idn.latitude, idn.longitude)) } as CityWeather;
+            } catch {
+              return null;
+            }
+          }),
+        );
+        const ok = restored.filter((c): c is CityWeather => c !== null);
+        setCities(ok);
+        setFavorites(new Set(ok.map((c) => c.id)));
+      } else {
+        await addCity("Pittsboro", { silent: true });
+      }
+      loadedRef.current = true;
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Persist favorites whenever they change (after the initial restore).
+  useEffect(() => {
+    if (!loadedRef.current) return;
+    const favCities = cities.filter((c) => favorites.has(c.id));
+    const identities: Identity[] = favCities.map(({ id, name, region, countryCode, latitude, longitude }) => ({
+      id,
+      name,
+      region,
+      countryCode,
+      latitude,
+      longitude,
+    }));
+    try {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(identities));
+    } catch {
+      /* ignore quota / unavailable */
+    }
+  }, [cities, favorites]);
+
+  // Tick the local clocks every second.
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Auto-refresh every city's weather once a minute.
+  useEffect(() => {
+    const refresh = async () => {
+      const updates = await Promise.all(
+        citiesRef.current.map(async (c) => {
+          try {
+            return { id: c.id, w: await fetchWeather(c.latitude, c.longitude) };
+          } catch {
+            return null;
+          }
+        }),
+      );
+      const byId = new Map(updates.filter(Boolean).map((u) => [u!.id, u!.w]));
+      setCities((prev) => prev.map((c) => (byId.has(c.id) ? { ...c, ...byId.get(c.id)! } : c)));
+    };
+    const id = setInterval(refresh, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  function toggleFavorite(id: string) {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function removeCity(id: string) {
+    setCities((prev) => prev.filter((c) => c.id !== id));
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }
 
   return (
     <main className="min-h-screen bg-slate-950 p-6">
@@ -243,20 +410,21 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-semibold text-white">Temp dashboard</h1>
             <p className="text-slate-400">
-              {cities.length}{maxCities !== null ? `/${maxCities}` : ""} cities on the board
+              {cities.length}
+              {maxCities !== null ? `/${maxCities}` : ""} cities · ★ favorites are saved · auto-updates every minute
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-400">
             Max cities
             <select
               value={maxCities ?? "unlimited"}
-              onChange={(e) =>
-                setMaxCities(e.target.value === "unlimited" ? null : Number(e.target.value))
-              }
+              onChange={(e) => setMaxCities(e.target.value === "unlimited" ? null : Number(e.target.value))}
               className="rounded-lg bg-slate-900 border border-slate-700 px-3 py-1.5 text-white focus:outline-none focus:border-sky-500"
             >
               {[3, 5, 8, 10, 15].map((n) => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n}>
+                  {n}
+                </option>
               ))}
               <option value="unlimited">Unlimited</option>
             </select>
@@ -267,9 +435,7 @@ export default function DashboardPage() {
                 key={u}
                 onClick={() => setUnit(u)}
                 className={`px-4 py-1.5 text-sm font-medium ${
-                  unit === u
-                    ? "bg-sky-600 text-white"
-                    : "bg-slate-900 text-slate-400 hover:text-white"
+                  unit === u ? "bg-sky-600 text-white" : "bg-slate-900 text-slate-400 hover:text-white"
                 }`}
               >
                 °{u}
@@ -298,11 +464,14 @@ export default function DashboardPage() {
 
         <div className="grid gap-4 mt-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {cities.map((c) => (
-            <Gauge
+            <GaugeCard
               key={c.id}
               data={c}
               unit={unit}
-              onRemove={() => setCities((prev) => prev.filter((x) => x.id !== c.id))}
+              now={now}
+              isFavorite={favorites.has(c.id)}
+              onToggleFavorite={() => toggleFavorite(c.id)}
+              onRemove={() => removeCity(c.id)}
             />
           ))}
         </div>
