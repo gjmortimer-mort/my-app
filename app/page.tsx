@@ -11,7 +11,9 @@ const SEASON = "2026";
 const LEAGUE = "4429";
 const BASE = "https://www.thesportsdb.com/api/v1/json/3";
 const SEASON_URL = `${BASE}/eventsseason.php?id=${LEAGUE}&s=${SEASON}`;
-const GROUPS_URL = `${BASE}/eventsround.php?id=${LEAGUE}&r=1&s=${SEASON}`; // round 1 carries group letters
+// The per-round endpoints return the complete group stage (24 games each, 3 rounds)
+// with scores, status, and group letters — far more complete than the season feed.
+const ROUND_URLS = [1, 2, 3].map((r) => `${BASE}/eventsround.php?id=${LEAGUE}&r=${r}&s=${SEASON}`);
 
 const TZ = "America/New_York";
 const ZONE_LABEL = "EST";
@@ -74,52 +76,57 @@ async function getJson(url: string): Promise<ApiEvent[] | null> {
 }
 
 export default async function Home() {
-  const [season, roundOne] = await Promise.all([getJson(SEASON_URL), getJson(GROUPS_URL)]);
+  const feeds = await Promise.all([getJson(SEASON_URL), ...ROUND_URLS.map(getJson)]);
+  const failed = feeds.every((f) => f === null);
 
-  // Build a team -> group letter map from the round that carries group data.
-  // Each team belongs to exactly one group, so this labels matches in any feed.
-  const teamGroup = new Map<string, string>();
-  for (const e of roundOne ?? []) {
-    if (e.strGroup) {
-      teamGroup.set(e.strHomeTeam, e.strGroup);
-      teamGroup.set(e.strAwayTeam, e.strGroup);
-    }
+  // Merge every feed by event id. The round feeds carry group letters; if any
+  // feed has a score/status/group for an event, keep it (handles feeds that lag).
+  const byId = new Map<string, ApiEvent>();
+  for (const e of feeds.flatMap((f) => f ?? [])) {
+    const prev = byId.get(e.idEvent);
+    byId.set(
+      e.idEvent,
+      prev
+        ? {
+            ...prev,
+            ...e,
+            strGroup: e.strGroup ?? prev.strGroup,
+            intHomeScore: e.intHomeScore ?? prev.intHomeScore,
+            intAwayScore: e.intAwayScore ?? prev.intAwayScore,
+            strStatus: e.strStatus ?? prev.strStatus,
+          }
+        : e,
+    );
   }
+  const events = [...byId.values()].filter((e) => kickoff(e)).sort((a, b) => kickoff(a)!.getTime() - kickoff(b)!.getTime());
 
   const updatedLabel = `${fmt(new Date(), { hour: "numeric", minute: "2-digit", hour12: true })} ${ZONE_LABEL}`;
 
-  const matches: Match[] = (season ?? [])
-    .filter((e) => kickoff(e))
-    .sort((a, b) => kickoff(a)!.getTime() - kickoff(b)!.getTime())
-    .map((e) => {
-      const d = kickoff(e)!;
-      const phase = classify(e);
-      const grp = e.strGroup ?? teamGroup.get(e.strHomeTeam) ?? teamGroup.get(e.strAwayTeam) ?? "";
-      return {
-        id: e.idEvent,
-        home: e.strHomeTeam,
-        away: e.strAwayTeam,
-        homeBadge: e.strHomeTeamBadge,
-        awayBadge: e.strAwayTeamBadge,
-        homeScore: e.intHomeScore,
-        awayScore: e.intAwayScore,
-        phase,
-        statusLabel: statusLabel(e, phase, d),
-        groupLabel: grp ? `Group ${grp}` : "",
-        etDateKey: dateKey(d),
-        dateHeading: fmt(d, { weekday: "long", month: "long", day: "numeric" }),
-      };
-    });
-
-  const failed = season === null;
+  const matches: Match[] = events.map((e) => {
+    const d = kickoff(e)!;
+    const phase = classify(e);
+    return {
+      id: e.idEvent,
+      home: e.strHomeTeam,
+      away: e.strAwayTeam,
+      homeBadge: e.strHomeTeamBadge,
+      awayBadge: e.strAwayTeamBadge,
+      homeScore: e.intHomeScore,
+      awayScore: e.intAwayScore,
+      phase,
+      statusLabel: statusLabel(e, phase, d),
+      groupLabel: e.strGroup ? `Group ${e.strGroup}` : "",
+      etDateKey: dateKey(d),
+      dateHeading: fmt(d, { weekday: "long", month: "long", day: "numeric" }),
+    };
+  });
 
   // All kickoffs (UTC ISO) so the client clock can count down to the next one.
-  const fixtures: Fixture[] = (season ?? [])
-    .map((e) => {
-      const d = kickoff(e);
-      return d ? { iso: d.toISOString(), home: e.strHomeTeam, away: e.strAwayTeam } : null;
-    })
-    .filter((f): f is Fixture => f !== null);
+  const fixtures: Fixture[] = events.map((e) => ({
+    iso: kickoff(e)!.toISOString(),
+    home: e.strHomeTeam,
+    away: e.strAwayTeam,
+  }));
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
