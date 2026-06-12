@@ -111,10 +111,18 @@ export default function TvClient({
 
   const slideCount = 1 + standingSlides.length + 1;
 
+  // Auto-advance; the timer restarts whenever the slide changes (incl. manual
+  // picks below), so a tap always buys a full interval on that slide.
   useEffect(() => {
     const id = setInterval(() => setSlide((s) => (s + 1) % slideCount), SLIDE_MS);
     return () => clearInterval(id);
-  }, [slideCount]);
+  }, [slideCount, slide]);
+
+  const slideLabels = [
+    "Matches",
+    ...standingSlides.map((_, i) => (standingSlides.length > 1 ? `Standings ${i + 1}` : "Standings")),
+    "Countdown",
+  ];
 
   let h = 0,
     m = 0,
@@ -221,10 +229,21 @@ export default function TvClient({
         )}
       </div>
 
-      {/* slide dots */}
-      <div className="mt-6 flex justify-center gap-2">
-        {Array.from({ length: slideCount }, (_, i) => (
-          <span key={i} className={`h-2 w-2 rounded-full ${i === slide ? "bg-sky-400" : "bg-slate-700"}`} />
+      {/* slide picker */}
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        {slideLabels.map((label, i) => (
+          <button
+            key={i}
+            onClick={() => setSlide(i)}
+            aria-current={i === slide ? "true" : undefined}
+            className={`rounded-full px-6 py-3 text-lg font-semibold transition-colors ${
+              i === slide
+                ? "bg-sky-600 text-white"
+                : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"
+            }`}
+          >
+            {label}
+          </button>
         ))}
       </div>
     </div>
