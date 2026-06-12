@@ -6,21 +6,35 @@ const GEO_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
 const FAVORITES_KEY = "tempdash.favorites.v1";
 
-const CONDITIONS: Record<number, string> = {
-  0: "Clear sky",
-  1: "Mainly clear",
-  2: "Partly cloudy",
-  3: "Overcast",
-  45: "Fog",
-  51: "Light drizzle",
-  61: "Light rain",
-  63: "Rain",
-  65: "Heavy rain",
-  71: "Light snow",
-  73: "Snow",
-  80: "Rain showers",
-  95: "Thunderstorm",
+const CONDITIONS: Record<number, { label: string; icon: string }> = {
+  0: { label: "Clear sky", icon: "☀️" },
+  1: { label: "Mainly clear", icon: "🌤️" },
+  2: { label: "Partly cloudy", icon: "⛅" },
+  3: { label: "Overcast", icon: "☁️" },
+  45: { label: "Fog", icon: "🌫️" },
+  48: { label: "Freezing fog", icon: "🌫️" },
+  51: { label: "Light drizzle", icon: "🌦️" },
+  53: { label: "Drizzle", icon: "🌦️" },
+  55: { label: "Heavy drizzle", icon: "🌧️" },
+  61: { label: "Light rain", icon: "🌦️" },
+  63: { label: "Rain", icon: "🌧️" },
+  65: { label: "Heavy rain", icon: "🌧️" },
+  66: { label: "Freezing rain", icon: "🌧️" },
+  67: { label: "Heavy freezing rain", icon: "🌧️" },
+  71: { label: "Light snow", icon: "🌨️" },
+  73: { label: "Snow", icon: "🌨️" },
+  75: { label: "Heavy snow", icon: "❄️" },
+  77: { label: "Snow grains", icon: "🌨️" },
+  80: { label: "Rain showers", icon: "🌦️" },
+  81: { label: "Showers", icon: "🌧️" },
+  82: { label: "Heavy showers", icon: "🌧️" },
+  85: { label: "Snow showers", icon: "🌨️" },
+  86: { label: "Heavy snow showers", icon: "❄️" },
+  95: { label: "Thunderstorm", icon: "⛈️" },
+  96: { label: "Thunderstorm w/ hail", icon: "⛈️" },
+  99: { label: "Severe thunderstorm", icon: "⛈️" },
 };
+const UNKNOWN_CONDITION = { label: "Unknown", icon: "🌡️" };
 
 type Identity = {
   id: string; // "lat,lon"
@@ -35,6 +49,7 @@ type CityWeather = Identity & {
   tempF: number;
   windMph: number;
   condition: string;
+  conditionIcon: string;
   utcOffsetSeconds: number;
 };
 
@@ -79,10 +94,12 @@ async function fetchWeather(lat: number, lon: number) {
       `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`,
   );
   const wx = (await res.json()) as WxResp;
+  const cond = CONDITIONS[wx.current.weather_code] ?? UNKNOWN_CONDITION;
   return {
     tempF: Math.round(wx.current.temperature_2m),
     windMph: Math.round(wx.current.wind_speed_10m),
-    condition: CONDITIONS[wx.current.weather_code] ?? "Unknown",
+    condition: cond.label,
+    conditionIcon: cond.icon,
     utcOffsetSeconds: wx.utc_offset_seconds ?? 0,
   };
 }
@@ -169,6 +186,9 @@ function GaugeCard({
         >
           {isFavorite ? "★" : "☆"}
         </button>
+        <span className="text-2xl leading-none" title={data.condition} aria-label={data.condition}>
+          {data.conditionIcon}
+        </span>
         <div className="flex items-center gap-2">
           <span className="rounded-md bg-slate-800/70 px-2 py-0.5 font-mono text-xs tabular-nums text-slate-300">
             {cityClock(now, data.utcOffsetSeconds)}
@@ -257,7 +277,7 @@ function GaugeCard({
       </div>
       <p className="text-center text-sm text-slate-400">
         {data.region ? `${data.region} · ` : ""}
-        {data.condition} · wind {data.windMph} mph
+        {data.conditionIcon} {data.condition} · wind {data.windMph} mph
       </p>
     </div>
   );
