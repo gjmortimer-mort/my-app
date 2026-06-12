@@ -288,7 +288,7 @@ export default function DashboardPage() {
   const [cities, setCities] = useState<CityWeather[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
-  const [unit, setUnit] = useState<Unit>("F");
+  const [unit, setUnit] = useState<Unit>("C");
   const [maxCities, setMaxCities] = useState<number | null>(5);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
