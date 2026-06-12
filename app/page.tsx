@@ -13,6 +13,7 @@ export default function Home() {
         badge: "FIFA World Cup 2026",
         groupWord: "Group",
         rounds: [1, 2, 3],
+        pointsScheme: "soccer",
       }}
     />
   );

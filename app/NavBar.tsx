@@ -7,10 +7,14 @@ const PAGES = [
   { href: "/", label: "⚽ Soccer World Cup" },
   { href: "/rugby", label: "🏉 Rugby World Cup" },
   { href: "/dashboard", label: "🌡️ Temperature Dashboard" },
+  { href: "/tv", label: "📺 TV mode" },
 ];
 
 export default function NavBar() {
   const pathname = usePathname();
+
+  // The TV page is a full-screen wall display — no chrome.
+  if (pathname === "/tv") return null;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur">

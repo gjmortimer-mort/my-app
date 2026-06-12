@@ -18,6 +18,8 @@ export default function RugbyPage() {
         groupWord: "Pool",
         rounds: [1, 2, 3],
         teamSuffix: " Rugby",
+        pointsScheme: "rugby",
+        pointsNote: "Rugby points: win 4, draw 2 (try/losing bonus points not included).",
         teams: [
           { key: "South Africa", label: "🇿🇦 South Africa" },
           { key: "Australia", label: "🇦🇺 Australia" },
