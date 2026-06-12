@@ -244,12 +244,12 @@ function GaugeCard({
         <circle cx={tipX} cy={tipY} r="2.5" fill="#0b1220"
           style={{ transition: "all 0.9s cubic-bezier(.3,1.1,.5,1)" }} />
 
-        {/* center readout */}
-        <text x="100" y="96" textAnchor="middle" fontSize="40" fontWeight="800" fill={color}>
-          {toUnit(data.tempF, unit)}°
+        {/* center readout — primary unit big, the other right below */}
+        <text x="100" y="92" textAnchor="middle" fontSize="38" fontWeight="800" fill={color}>
+          {toUnit(data.tempF, unit)}°{unit}
         </text>
-        <text x="100" y="118" textAnchor="middle" fontSize="12" fontWeight="600" fill="#64748b">
-          {unit === "F" ? "Fahrenheit" : "Celsius"}
+        <text x="100" y="116" textAnchor="middle" fontSize="15" fontWeight="600" fill="#94a3b8">
+          {toUnit(data.tempF, unit === "F" ? "C" : "F")}°{unit === "F" ? "C" : "F"}
         </text>
 
         {/* end labels */}
