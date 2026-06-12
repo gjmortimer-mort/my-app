@@ -32,7 +32,19 @@
       "Bash(python3 -c ' *)",
       "Bash(git commit --allow-empty -q -m ' *)",
       "Bash(curl -s -o /dev/null -w \"status=%{http_code} type=%{content_type} bytes=%{size_download}\\\\n\" --max-time 15 \"https://flagcdn.com/w320/za.png\")",
-      "Bash(curl -s -o /dev/null -w \"status=%{http_code} type=%{content_type} bytes=%{size_download}\\\\n\" --max-time 15 \"https://flagcdn.com/w640/za.png\")"
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code} type=%{content_type} bytes=%{size_download}\\\\n\" --max-time 15 \"https://flagcdn.com/w640/za.png\")",
+      "Bash(dig +short NS mortimerfamily.com)",
+      "Bash(dig +short MX mortimerfamily.com)",
+      "Bash(dig +short TXT mortimerfamily.com)",
+      "Bash(dig +short A mortimerfamily.com)",
+      "Bash(dig +short TXT _dmarc.mortimerfamily.com)",
+      "Bash(dig @ns1.siteground.net worldcup.mortimerfamily.com CNAME +short)",
+      "Bash(dig @ns1.siteground.net worldcup.mortimerfamily.com +short)",
+      "Bash(dig @8.8.8.8 worldcup.mortimerfamily.com +short)",
+      "Bash(dig @ns1.siteground.net mortimerfamily.com MX +short)",
+      "Bash(dig @ns1.siteground.net mortimerfamily.com TXT +short)",
+      "Bash(curl -s -o /dev/null -w 'status=%{http_code}  redirects-to=%{redirect_url}\\\\n' --max-time 15 http://worldcup.mortimerfamily.com/)",
+      "Bash(python3 -c 'import sys,json; e=json.load\\(sys.stdin\\)['\\\\''events'\\\\'']; *)"
     ]
   }
 }

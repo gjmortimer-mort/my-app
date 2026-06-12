@@ -88,12 +88,31 @@ function MatchRow({ m }: { m: Match }) {
   );
 }
 
+const TEAM_OPTIONS = [
+  { key: "all", label: "All teams" },
+  { key: "South Africa", label: "🇿🇦 South Africa" },
+  { key: "Australia", label: "🇦🇺 Australia" },
+] as const;
+
+type TeamFilter = (typeof TEAM_OPTIONS)[number]["key"];
+
 export default function Board({ matches }: { matches: Match[] }) {
   const today = todayKeyET();
   const hasToday = useMemo(() => matches.some((m) => m.etDateKey === today), [matches, today]);
   const [filter, setFilter] = useState<"today" | "all">(hasToday ? "today" : "all");
+  const [team, setTeam] = useState<TeamFilter>("all");
 
-  const visible = filter === "today" ? matches.filter((m) => m.etDateKey === today) : matches;
+  const visible = matches.filter(
+    (m) =>
+      (filter === "all" || m.etDateKey === today) &&
+      (team === "all" || m.home === team || m.away === team),
+  );
+
+  // Selecting a specific team shows all of that team's games (not just today's).
+  function pickTeam(t: TeamFilter) {
+    setTeam(t);
+    if (t !== "all") setFilter("all");
+  }
 
   // Group the visible matches by Eastern day, preserving chronological order.
   const groups: { key: string; heading: string; matches: Match[] }[] = [];
@@ -108,25 +127,47 @@ export default function Board({ matches }: { matches: Match[] }) {
 
   return (
     <div>
-      <div className="mb-6 inline-flex rounded-lg border border-slate-700 p-0.5">
-        {(["today", "all"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
-              filter === f ? "bg-sky-600 text-white" : "text-slate-400 hover:text-white"
-            }`}
-          >
-            {f === "today" ? "Today" : "Full schedule"}
-          </button>
-        ))}
+      <div className="mb-6 flex flex-wrap gap-3">
+        <div className="inline-flex rounded-lg border border-slate-700 p-0.5">
+          {(["today", "all"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                filter === f ? "bg-sky-600 text-white" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {f === "today" ? "Today" : "Full schedule"}
+            </button>
+          ))}
+        </div>
+
+        <div className="inline-flex rounded-lg border border-slate-700 p-0.5">
+          {TEAM_OPTIONS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => pickTeam(t.key)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                team === t.key ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {groups.length === 0 ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-400">
-          No matches today.{" "}
-          <button onClick={() => setFilter("all")} className="font-medium text-sky-400 hover:text-sky-300">
-            See the full schedule →
+          No {team !== "all" ? `${team} ` : ""}matches {filter === "today" ? "today" : "scheduled"}.{" "}
+          <button
+            onClick={() => {
+              setFilter("all");
+              setTeam("all");
+            }}
+            className="font-medium text-sky-400 hover:text-sky-300"
+          >
+            Show everything →
           </button>
         </div>
       ) : (
