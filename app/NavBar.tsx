@@ -13,9 +13,6 @@ const PAGES = [
 export default function NavBar() {
   const pathname = usePathname();
 
-  // The TV page is a full-screen wall display — no chrome.
-  if (pathname === "/tv") return null;
-
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-2 sm:gap-2 sm:px-6">
