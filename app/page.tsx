@@ -126,12 +126,23 @@ export default async function Home() {
       <AutoRefresh />
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-8 flex items-start justify-between gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://flagcdn.com/w640/za.png"
-            alt="Flag of South Africa"
-            className="h-16 w-auto rounded-md shadow-lg ring-1 ring-white/10 sm:h-20"
-          />
+          <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://flagcdn.com/w640/za.png"
+              alt="Flag of South Africa"
+              className="h-16 w-auto rounded-md shadow-lg ring-1 ring-white/10 sm:h-20"
+            />
+            <span
+              className="text-2xl leading-tight text-amber-300 sm:text-4xl"
+              style={{
+                fontFamily: "var(--font-display)",
+                textShadow: "0 0 8px rgba(251,191,36,0.55), 0 0 22px rgba(251,191,36,0.35)",
+              }}
+            >
+              Morts Bar on Old Graham
+            </span>
+          </div>
           <Countdown fixtures={fixtures} />
         </div>
         <header className="mb-8">
