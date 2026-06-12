@@ -178,7 +178,7 @@ export default async function Home() {
           <span>Data: TheSportsDB</span>
           <nav className="flex gap-4">
             <Link href="/dashboard" className="hover:text-slate-300">
-              Temp dashboard
+              City Temperature Dashboard
             </Link>
           </nav>
         </footer>
