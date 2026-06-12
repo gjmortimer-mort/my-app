@@ -180,9 +180,6 @@ export default async function Home() {
             <Link href="/dashboard" className="hover:text-slate-300">
               Temp dashboard
             </Link>
-            <Link href="/weather" className="hover:text-slate-300">
-              Weather check
-            </Link>
           </nav>
         </footer>
       </div>
