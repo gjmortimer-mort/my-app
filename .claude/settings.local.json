@@ -47,7 +47,9 @@
       "Bash(python3 -c 'import sys,json; e=json.load\\(sys.stdin\\)['\\\\''events'\\\\'']; *)",
       "Bash(python3 -)",
       "Bash(python3 -c \"import sys,json; j=json.load\\(sys.stdin\\); print\\('utc_offset_seconds:',j.get\\('utc_offset_seconds'\\)\\); print\\('timezone:',j.get\\('timezone'\\)\\); print\\('current:',j.get\\('current'\\)\\)\")",
-      "Bash(curl -s --max-time 15 \"https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4574&s=2027\")"
+      "Bash(curl -s --max-time 15 \"https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4574&s=2027\")",
+      "Bash(curl -s --max-time 15 \"https://flagcdn.com/za.svg\" -o /tmp/za.svg)",
+      "Read(//tmp/**)"
     ]
   }
 }
