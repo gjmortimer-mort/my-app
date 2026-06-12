@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 const PAGES = [
   { href: "/", label: "⚽ Soccer World Cup" },
   { href: "/rugby", label: "🏉 Rugby World Cup" },
-  { href: "/dashboard", label: "🌡️ Temperature Dashboard" },
   { href: "/tv", label: "📺 TV mode" },
+  { href: "/dashboard", label: "🌡️ Temperature Dashboard" },
 ];
 
 export default function NavBar() {
