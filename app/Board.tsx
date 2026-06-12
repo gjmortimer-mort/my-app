@@ -60,7 +60,12 @@ function MatchRow({ m }: { m: Match }) {
         <TeamBadge src={m.homeBadge} alt={m.home} />
       </div>
 
-      <div className="flex w-24 shrink-0 flex-col items-center gap-1">
+      <div className="flex w-28 shrink-0 flex-col items-center gap-1.5">
+        {m.groupLabel && (
+          <span className="rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-violet-300 ring-1 ring-violet-500/30">
+            {m.groupLabel}
+          </span>
+        )}
         <div className="text-xl font-semibold tabular-nums text-white">
           {hasScore ? (
             <span>
@@ -73,11 +78,6 @@ function MatchRow({ m }: { m: Match }) {
           )}
         </div>
         <StatusPill phase={m.phase} label={m.statusLabel} />
-        {m.groupLabel && (
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-            {m.groupLabel}
-          </span>
-        )}
       </div>
 
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
