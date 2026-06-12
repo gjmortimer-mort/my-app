@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AutoRefresh from "./AutoRefresh";
 import Board, { type Match, type Phase } from "./Board";
+import Countdown, { type Fixture } from "./Countdown";
 
 // Refresh the cached data at most once an hour (ISR). The client <AutoRefresh>
 // then pulls the latest copy into open tabs on the same cadence.
@@ -112,10 +113,27 @@ export default async function Home() {
 
   const failed = season === null;
 
+  // All kickoffs (UTC ISO) so the client clock can count down to the next one.
+  const fixtures: Fixture[] = (season ?? [])
+    .map((e) => {
+      const d = kickoff(e);
+      return d ? { iso: d.toISOString(), home: e.strHomeTeam, away: e.strAwayTeam } : null;
+    })
+    .filter((f): f is Fixture => f !== null);
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <AutoRefresh />
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mb-8 flex items-start justify-between gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://flagcdn.com/w640/za.png"
+            alt="Flag of South Africa"
+            className="h-16 w-auto rounded-md shadow-lg ring-1 ring-white/10 sm:h-20"
+          />
+          <Countdown fixtures={fixtures} />
+        </div>
         <header className="mb-8">
           <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium text-slate-400">
             FIFA World Cup {SEASON}

@@ -30,7 +30,9 @@
       "Bash(python3 -c \"import sys,json; e=json.load\\(sys.stdin\\)['events']; from collections import Counter; print\\(Counter\\(x.get\\('strStatus'\\) for x in e\\)\\); print\\('scored games:', sum\\(1 for x in e if x.get\\('intHomeScore'\\) is not None\\)\\)\")",
       "Bash(node -e ' *)",
       "Bash(python3 -c ' *)",
-      "Bash(git commit --allow-empty -q -m ' *)"
+      "Bash(git commit --allow-empty -q -m ' *)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code} type=%{content_type} bytes=%{size_download}\\\\n\" --max-time 15 \"https://flagcdn.com/w320/za.png\")",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code} type=%{content_type} bytes=%{size_download}\\\\n\" --max-time 15 \"https://flagcdn.com/w640/za.png\")"
     ]
   }
 }
