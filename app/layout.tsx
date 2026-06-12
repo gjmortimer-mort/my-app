@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My apps",
-  description: "A home for the things I'm building.",
+  title: "World Cup 2026 — Results & Fixtures",
+  description: "Live World Cup 2026 scores and fixtures, kickoff times in Eastern, refreshed hourly.",
 };
 
 export default function RootLayout({

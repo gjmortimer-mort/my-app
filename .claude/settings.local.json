@@ -22,7 +22,13 @@
       "Bash(git push *)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\); console.log\\('next version:', \\(p.dependencies&&p.dependencies.next\\)||'?'\\)\")",
       "Bash(npm run *)",
-      "WebFetch(domain:my-app-topaz-three-53.vercel.app)"
+      "WebFetch(domain:my-app-topaz-three-53.vercel.app)",
+      "Bash(curl -s --max-time 15 \"https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026\")",
+      "Bash(curl -s --max-time 15 \"https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=4429\")",
+      "Bash(curl -s --max-time 15 \"https://www.thesportsdb.com/api/v1/json/3/lookupleague.php?id=4429\")",
+      "Bash(python3 -c \"import sys,json; e=json.load\\(sys.stdin\\)['events']; print\\('TOTAL EVENTS:',len\\(e\\)\\); import json as j; print\\(j.dumps\\(e[0],indent=1\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; e=json.load\\(sys.stdin\\)['events']; from collections import Counter; print\\(Counter\\(x.get\\('strStatus'\\) for x in e\\)\\); print\\('scored games:', sum\\(1 for x in e if x.get\\('intHomeScore'\\) is not None\\)\\)\")",
+      "Bash(node -e ' *)"
     ]
   }
 }
