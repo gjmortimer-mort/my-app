@@ -27,11 +27,14 @@ export default function Countdown({ fixtures }: { fixtures: Fixture[] }) {
 
   const next = now == null ? null : (sorted.find((f) => f.t > now) ?? null);
 
-  let h = 0,
+  let d = 0,
+    h = 0,
     m = 0,
     s = 0;
   if (now != null && next) {
     let diff = Math.max(0, Math.floor((next.t - now) / 1000));
+    d = Math.floor(diff / 86400);
+    diff -= d * 86400;
     h = Math.floor(diff / 3600);
     diff -= h * 3600;
     m = Math.floor(diff / 60);
@@ -46,6 +49,7 @@ export default function Countdown({ fixtures }: { fixtures: Fixture[] }) {
       ) : next ? (
         <>
           <div className="font-mono text-2xl font-semibold tabular-nums text-white sm:text-3xl">
+            {d > 0 && <span>{d}<span className="pr-1.5 text-base font-medium text-slate-400">d</span></span>}
             {pad(h)}:{pad(m)}:{pad(s)}
           </div>
           <div className="max-w-[12rem] truncate text-xs text-slate-400">
