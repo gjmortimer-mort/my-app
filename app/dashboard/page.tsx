@@ -428,7 +428,7 @@ export default function DashboardPage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-semibold text-white">Temp dashboard</h1>
+            <h1 className="text-3xl font-semibold text-white">City Temperature Dashboard</h1>
             <p className="text-slate-400">
               {cities.length}
               {maxCities !== null ? `/${maxCities}` : ""} cities · ★ favorites are saved · auto-updates every minute
