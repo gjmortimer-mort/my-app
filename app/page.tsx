@@ -13,10 +13,6 @@ export default function Home() {
         badge: "FIFA World Cup 2026",
         groupWord: "Group",
         rounds: [1, 2, 3],
-        links: [
-          { href: "/rugby", label: "Rugby World Cup 2027" },
-          { href: "/dashboard", label: "City Temperature Dashboard" },
-        ],
       }}
     />
   );

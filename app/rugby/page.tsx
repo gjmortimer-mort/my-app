@@ -18,10 +18,6 @@ export default function RugbyPage() {
         groupWord: "Pool",
         rounds: [1, 2, 3],
         teamSuffix: " Rugby",
-        links: [
-          { href: "/", label: "Soccer World Cup 2026" },
-          { href: "/dashboard", label: "City Temperature Dashboard" },
-        ],
       }}
     />
   );
