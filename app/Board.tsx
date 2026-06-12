@@ -88,19 +88,19 @@ function MatchRow({ m }: { m: Match }) {
   );
 }
 
-const TEAM_OPTIONS = [
-  { key: "all", label: "All teams" },
+export type TeamOption = { key: string; label: string };
+
+const DEFAULT_TEAMS: TeamOption[] = [
   { key: "South Africa", label: "🇿🇦 South Africa" },
   { key: "Australia", label: "🇦🇺 Australia" },
-] as const;
+];
 
-type TeamFilter = (typeof TEAM_OPTIONS)[number]["key"];
-
-export default function Board({ matches }: { matches: Match[] }) {
+export default function Board({ matches, teams = DEFAULT_TEAMS }: { matches: Match[]; teams?: TeamOption[] }) {
+  const teamOptions: TeamOption[] = [{ key: "all", label: "All teams" }, ...teams];
   const today = todayKeyET();
   const hasToday = useMemo(() => matches.some((m) => m.etDateKey === today), [matches, today]);
   const [filter, setFilter] = useState<"today" | "all">(hasToday ? "today" : "all");
-  const [team, setTeam] = useState<TeamFilter>("all");
+  const [team, setTeam] = useState<string>("all");
 
   const visible = matches.filter(
     (m) =>
@@ -109,7 +109,7 @@ export default function Board({ matches }: { matches: Match[] }) {
   );
 
   // Selecting a specific team shows all of that team's games (not just today's).
-  function pickTeam(t: TeamFilter) {
+  function pickTeam(t: string) {
     setTeam(t);
     if (t !== "all") setFilter("all");
   }
@@ -143,7 +143,7 @@ export default function Board({ matches }: { matches: Match[] }) {
         </div>
 
         <div className="inline-flex rounded-lg border border-slate-700 p-0.5">
-          {TEAM_OPTIONS.map((t) => (
+          {teamOptions.map((t) => (
             <button
               key={t.key}
               onClick={() => pickTeam(t.key)}

@@ -1,5 +1,5 @@
 import AutoRefresh from "./AutoRefresh";
-import Board, { type Match, type Phase } from "./Board";
+import Board, { type Match, type Phase, type TeamOption } from "./Board";
 import Countdown, { type Fixture } from "./Countdown";
 
 const BASE = "https://www.thesportsdb.com/api/v1/json/3";
@@ -13,6 +13,7 @@ export type TournamentConfig = {
   groupWord: string; // "Group" (soccer) or "Pool" (rugby)
   rounds: number[]; // pool/group-stage rounds that carry group letters
   teamSuffix?: string; // e.g. " Rugby" — stripped from team names for display
+  teams?: TeamOption[]; // team-filter toggle options (defaults to SA + Australia)
 };
 
 type ApiEvent = {
@@ -73,7 +74,7 @@ async function getJson(url: string): Promise<ApiEvent[] | null> {
 }
 
 export default async function Tournament({ config }: { config: TournamentConfig }) {
-  const { leagueId, season, badge, groupWord, rounds, teamSuffix } = config;
+  const { leagueId, season, badge, groupWord, rounds, teamSuffix, teams } = config;
 
   const seasonUrl = `${BASE}/eventsseason.php?id=${leagueId}&s=${season}`;
   const roundUrls = rounds.map((r) => `${BASE}/eventsround.php?id=${leagueId}&r=${r}&s=${season}`);
@@ -177,7 +178,7 @@ export default async function Tournament({ config }: { config: TournamentConfig 
             No matches scheduled yet. They&apos;ll appear here as soon as the fixtures are published.
           </div>
         ) : (
-          <Board matches={matches} />
+          <Board matches={matches} teams={teams} />
         )}
 
         <footer className="mt-12 border-t border-slate-800 pt-6 text-sm text-slate-500">

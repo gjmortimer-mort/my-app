@@ -18,6 +18,11 @@ export default function RugbyPage() {
         groupWord: "Pool",
         rounds: [1, 2, 3],
         teamSuffix: " Rugby",
+        teams: [
+          { key: "South Africa", label: "🇿🇦 South Africa" },
+          { key: "Australia", label: "🇦🇺 Australia" },
+          { key: "New Zealand", label: "🇳🇿 New Zealand" },
+        ],
       }}
     />
   );
