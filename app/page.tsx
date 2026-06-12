@@ -14,6 +14,11 @@ export default function Home() {
         groupWord: "Group",
         rounds: [1, 2, 3],
         pointsScheme: "soccer",
+        teams: [
+          { key: "South Africa", label: "🇿🇦 South Africa" },
+          { key: "Australia", label: "🇦🇺 Australia" },
+          { key: "New Zealand", label: "🇳🇿 New Zealand" },
+        ],
       }}
     />
   );
