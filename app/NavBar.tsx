@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import BarWeather from "./BarWeather";
 
 type Item = { href: string; label: string };
 
@@ -114,6 +115,10 @@ export default function NavBar() {
             {l.label}
           </Link>
         ))}
+
+        <div className="ml-auto">
+          <BarWeather />
+        </div>
       </div>
     </nav>
   );

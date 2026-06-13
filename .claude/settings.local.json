@@ -66,7 +66,8 @@
       "WebFetch(domain:www.world.rugby)",
       "Bash(curl -sL --max-time 25 -A \"Mozilla/5.0\" \"https://www.world.rugby/u20/en/matches/2026\")",
       "Bash(grep -oE \"apiUrl[^,]{0,80}|baseUrl[^,]{0,80}|VITE_[A-Z_]+|competitionId[^,]{0,40}\")",
-      "Bash(curl -s --max-time 20 \"https://feeds.behold.so/bgnI2kMlP5fQTY2pPZg8\")"
+      "Bash(curl -s --max-time 20 \"https://feeds.behold.so/bgnI2kMlP5fQTY2pPZg8\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\)['current']; f=round\\(d['temperature_2m']\\); print\\(f'temp: {f}°F / {round\\(\\(f-32\\)*5/9\\)}°C | weather_code: {d[\\\\\"weather_code\\\\\"]}'\\)\")"
     ]
   }
 }
