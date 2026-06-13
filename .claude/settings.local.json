@@ -62,7 +62,10 @@
       "Bash(curl -s --max-time 20 \"https://my-app-topaz-three-53.vercel.app/nfl?c=$\\(date +%s\\)\")",
       "Bash(curl -s --max-time 20 https://my-app-topaz-three-53.vercel.app/nfl?c=__CMDSUB_OUTPUT__)",
       "Bash(xargs sed -i '' -e 's#https://flagcdn.com/w640/za.png#/morts-logo.png#g' -e 's#https://flagcdn.com/w160/za.png#/morts-logo.png#g' -e 's#alt=\"Flag of South Africa\"#alt=\"Morts Bar\"#g' -e 's#alt=\"South Africa\"#alt=\"Morts Bar\"#g' -e 's#h-16 w-auto rounded-md shadow-lg ring-1 ring-white/10 sm:h-20#h-16 w-16 rounded-full shadow-lg ring-1 ring-white/10 sm:h-20 sm:w-20#g' -e 's#h-16 w-auto rounded-md shadow-lg ring-1 ring-white/10#h-16 w-16 rounded-full shadow-lg ring-1 ring-white/10 sm:h-20 sm:w-20#g' -e 's#h-7 w-auto rounded-sm ring-1 ring-black/10#h-7 w-7 rounded-full ring-1 ring-black/10#g')",
-      "Bash(sips -s format png -z 256 256 public/morts-logo.png --out app/icon.png)"
+      "Bash(sips -s format png -z 256 256 public/morts-logo.png --out app/icon.png)",
+      "WebFetch(domain:www.world.rugby)",
+      "Bash(curl -sL --max-time 25 -A \"Mozilla/5.0\" \"https://www.world.rugby/u20/en/matches/2026\")",
+      "Bash(grep -oE \"apiUrl[^,]{0,80}|baseUrl[^,]{0,80}|VITE_[A-Z_]+|competitionId[^,]{0,40}\")"
     ]
   }
 }

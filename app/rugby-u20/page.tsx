@@ -1,27 +1,68 @@
 import type { Metadata } from "next";
+import AutoRefresh from "../AutoRefresh";
 import Footer from "../Footer";
+import { getU20Data, ZONE_LABEL, type U20Match } from "../lib/u20Data";
+import { IDLE_REFRESH_MS, LIVE_REFRESH_MS } from "../lib/tournamentData";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "U20 World Cup 2026 — Junior Boks",
-  description: "World Rugby U20 Championship 2026 fixtures and results.",
+  description: "World Rugby U20 Championship 2026 fixtures, pools and results — backing the Junior Boks.",
 };
 
-// World Rugby U20 Championship isn't in the data feed, so fixtures are pinned
-// from a source. Add games here (same idea as the Stanley Cup page) and they'll
-// render below; until then the page shows a friendly placeholder.
-type U20Game = {
-  dateLabel: string;
-  home: string;
-  away: string;
-  hs?: number;
-  as?: number;
-  comp?: string;
-};
-const U20_FIXTURES: U20Game[] = [];
+function Row({ m }: { m: U20Match }) {
+  const played = m.homeScore != null && m.awayScore != null;
+  const pill =
+    m.phase === "live"
+      ? "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/40"
+      : m.phase === "final"
+        ? "bg-slate-700/60 text-slate-300"
+        : "bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/30";
+  return (
+    <div className={`rounded-2xl border p-4 ${m.isSA ? "border-emerald-500/40 bg-emerald-500/[0.06]" : "border-slate-800 bg-slate-900"}`}>
+      <div className="mb-2 flex items-center justify-between gap-2 text-xs">
+        <span className="truncate rounded-full bg-violet-500/15 px-2.5 py-0.5 font-semibold uppercase tracking-wide text-violet-300 ring-1 ring-violet-500/30">
+          {m.pool || "U20 World Cup"}
+        </span>
+        <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${pill}`}>
+          {m.phase === "live" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />}
+          {m.phase === "live" ? "Live" : m.phase === "final" ? "Final" : `${m.timeLabel}`}
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="flex-1 truncate font-medium text-white">
+          {m.home === "South Africa" ? "🇿🇦 " : ""}
+          {m.home}
+        </span>
+        <span className="shrink-0 text-lg font-semibold tabular-nums text-white">
+          {played ? `${m.homeScore} – ${m.awayScore}` : <span className="text-slate-500">vs</span>}
+        </span>
+        <span className="flex-1 truncate text-right font-medium text-white">
+          {m.away}
+          {m.away === "South Africa" ? " 🇿🇦" : ""}
+        </span>
+      </div>
+    </div>
+  );
+}
 
-export default function RugbyU20Page() {
+export default async function RugbyU20Page() {
+  const { failed, matches, updatedLabel, hasLive } = await getU20Data();
+
+  const groups: { key: string; heading: string; matches: U20Match[] }[] = [];
+  for (const m of matches) {
+    let g = groups.find((x) => x.key === m.etDateKey);
+    if (!g) {
+      g = { key: m.etDateKey, heading: m.dateHeading, matches: [] };
+      groups.push(g);
+    }
+    g.matches.push(m);
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
+      <AutoRefresh intervalMs={hasLive ? LIVE_REFRESH_MS : IDLE_REFRESH_MS} />
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-8 flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -46,37 +87,28 @@ export default function RugbyU20Page() {
             World Rugby U20 Championship 2026 🌱
           </span>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">U20 World Cup</h1>
-          <p className="mt-2 text-sm text-slate-400">Backing the Junior Boks 🇿🇦 for the title.</p>
+          <p className="mt-2 text-sm text-slate-400">
+            Backing the Junior Boks 🇿🇦 · all times {ZONE_LABEL} · updated {updatedLabel} ·{" "}
+            {hasLive ? <span className="font-medium text-rose-300">live — refreshing every minute</span> : "kicks off June 27"}
+          </p>
         </header>
 
-        {U20_FIXTURES.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 p-8 text-center text-slate-400">
-            <p className="text-lg font-medium text-slate-300">Fixtures coming soon 🌱</p>
-            <p className="mt-2 text-sm">
-              The U20 World Cup isn&apos;t in the live data feed, so the schedule will be pinned by hand. Send the
-              fixtures and they&apos;ll appear right here, with scores added as games are played.
-            </p>
+        {failed ? (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 text-amber-200">
+            Couldn&apos;t reach the U20 feed right now. It&apos;ll retry automatically — check back shortly.
           </div>
         ) : (
-          <div className="space-y-3">
-            {U20_FIXTURES.map((g, i) => {
-              const played = g.hs != null && g.as != null;
-              return (
-                <div key={i} className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-                  <div className="mb-2 flex items-center justify-between text-xs">
-                    <span className="font-semibold uppercase tracking-wide text-violet-300">{g.comp ?? "U20 World Cup"}</span>
-                    <span className="text-slate-400">{g.dateLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="flex-1 truncate font-medium text-white">{g.home}</span>
-                    <span className="shrink-0 text-lg font-semibold tabular-nums text-white">
-                      {played ? `${g.hs} – ${g.as}` : "vs"}
-                    </span>
-                    <span className="flex-1 truncate text-right font-medium text-white">{g.away}</span>
-                  </div>
+          <div className="space-y-8">
+            {groups.map((g) => (
+              <section key={g.key}>
+                <h2 className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-slate-500">{g.heading}</h2>
+                <div className="space-y-3">
+                  {g.matches.map((m) => (
+                    <Row key={m.id} m={m} />
+                  ))}
                 </div>
-              );
-            })}
+              </section>
+            ))}
           </div>
         )}
       </div>
