@@ -1,9 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import type { CricketMatch } from "../lib/cricketData";
 
-type TeamOpt = { key: string; label: string };
+// A match from a national-team feed (cricket, international rugby, etc.):
+// carries a competition name and an optional result line, unlike the
+// group-stage Match used by Board.
+export type TeamMatch = {
+  id: string;
+  home: string;
+  away: string;
+  homeBadge: string | null;
+  awayBadge: string | null;
+  homeScore: string | null;
+  awayScore: string | null;
+  phase: "upcoming" | "live" | "final";
+  statusLabel: string;
+  result: string; // e.g. "South Africa won by 6 wickets" (cricket) — may be empty
+  competition: string; // strLeague
+  etDateKey: string;
+  dateHeading: string;
+};
+
+export type TeamOption = { key: string; label: string };
 
 function Badge({ src, alt }: { src: string | null; alt: string }) {
   if (!src) return <span className="h-8 w-8 shrink-0 rounded-full bg-slate-700" aria-hidden />;
@@ -11,7 +29,7 @@ function Badge({ src, alt }: { src: string | null; alt: string }) {
   return <img src={src} alt={alt} width={32} height={32} className="h-8 w-8 shrink-0 object-contain" />;
 }
 
-function MatchCard({ m }: { m: CricketMatch }) {
+function MatchCard({ m }: { m: TeamMatch }) {
   const hasScore = m.homeScore != null && m.awayScore != null;
   const pill =
     m.phase === "live"
@@ -61,13 +79,13 @@ function MatchCard({ m }: { m: CricketMatch }) {
   );
 }
 
-export default function CricketBoard({ matches, teams }: { matches: CricketMatch[]; teams: TeamOpt[] }) {
+export default function FixturesBoard({ matches, teams }: { matches: TeamMatch[]; teams: TeamOption[] }) {
   const [team, setTeam] = useState<string>("all");
-  const options: TeamOpt[] = [{ key: "all", label: "All teams" }, ...teams];
+  const options: TeamOption[] = [{ key: "all", label: "All teams" }, ...teams];
 
   const visible = matches.filter((m) => team === "all" || m.home === team || m.away === team);
 
-  const groups: { key: string; heading: string; matches: CricketMatch[] }[] = [];
+  const groups: { key: string; heading: string; matches: TeamMatch[] }[] = [];
   for (const m of visible) {
     let g = groups.find((x) => x.key === m.etDateKey);
     if (!g) {

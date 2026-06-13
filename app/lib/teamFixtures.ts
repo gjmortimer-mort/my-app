@@ -1,35 +1,18 @@
+import type { TeamMatch } from "../FixturesBoard";
 import type { Fixture } from "../Countdown";
 
 const BASE = "https://www.thesportsdb.com/api/v1/json/3";
 const TZ = "America/New_York";
 export const ZONE_LABEL = "EST";
 
-// National cricket team ids in TheSportsDB.
-export const CRICKET_TEAMS = [
-  { key: "South Africa", id: "137150", label: "🇿🇦 South Africa" },
-  { key: "Australia", id: "137146", label: "🇦🇺 Australia" },
-  { key: "New Zealand", id: "137145", label: "🇳🇿 New Zealand" },
-];
-
-export type CricketMatch = {
-  id: string;
-  home: string;
-  away: string;
-  homeBadge: string | null;
-  awayBadge: string | null;
-  homeScore: string | null;
-  awayScore: string | null;
-  phase: "upcoming" | "live" | "final";
-  statusLabel: string;
-  result: string; // e.g. "South Africa won by 6 wickets"
-  competition: string; // strLeague
-  etDateKey: string;
-  dateHeading: string;
+export type TeamFixturesConfig = {
+  teamIds: string[]; // national-team ids to pull recent + upcoming events for
+  teamSuffix?: string; // e.g. " Rugby" / " Cricket" — stripped from names
 };
 
-export type CricketData = {
+export type TeamFixturesData = {
   failed: boolean;
-  matches: CricketMatch[];
+  matches: TeamMatch[];
   fixtures: Fixture[];
   updatedLabel: string;
   hasLive: boolean;
@@ -49,8 +32,8 @@ type ApiEvent = {
   strLeague: string | null;
 };
 
-const FINAL_STATUSES = new Set(["FT", "MATCH FINISHED", "AET"]);
-const LIVE_STATUSES = new Set(["LIVE", "INNINGS BREAK", "IN PROGRESS", "1ST INNINGS", "2ND INNINGS"]);
+const FINAL_STATUSES = new Set(["FT", "AOT", "MATCH FINISHED", "AET", "FINAL"]);
+const LIVE_STATUSES = new Set(["LIVE", "IN PROGRESS", "1H", "2H", "HT", "INNINGS BREAK"]);
 
 const fmt = (d: Date, opts: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat("en-US", { timeZone: TZ, ...opts }).format(d);
@@ -74,13 +57,9 @@ async function getJson(url: string): Promise<ApiEvent[]> {
   }
 }
 
-const clean = (name: string) => (name.endsWith(" Cricket") ? name.slice(0, -" Cricket".length) : name);
-
-export async function getCricketData(): Promise<CricketData> {
-  const urls = CRICKET_TEAMS.flatMap((t) => [
-    `${BASE}/eventslast.php?id=${t.id}`,
-    `${BASE}/eventsnext.php?id=${t.id}`,
-  ]);
+export async function getTeamFixtures(config: TeamFixturesConfig): Promise<TeamFixturesData> {
+  const { teamIds, teamSuffix } = config;
+  const urls = teamIds.flatMap((id) => [`${BASE}/eventslast.php?id=${id}`, `${BASE}/eventsnext.php?id=${id}`]);
   const results = await Promise.all(urls.map(getJson));
   const failed = results.every((r) => r.length === 0);
 
@@ -91,11 +70,13 @@ export async function getCricketData(): Promise<CricketData> {
     .filter((e) => kickoff(e))
     .sort((a, b) => kickoff(a)!.getTime() - kickoff(b)!.getTime());
 
-  const matches: CricketMatch[] = events.map((e) => {
+  const clean = (name: string) => (teamSuffix && name.endsWith(teamSuffix) ? name.slice(0, -teamSuffix.length) : name);
+
+  const matches: TeamMatch[] = events.map((e) => {
     const d = kickoff(e)!;
     const s = (e.strStatus ?? "").toUpperCase();
     const hasScore = e.intHomeScore != null && e.intAwayScore != null;
-    const phase: CricketMatch["phase"] = FINAL_STATUSES.has(s)
+    const phase: TeamMatch["phase"] = FINAL_STATUSES.has(s)
       ? "final"
       : LIVE_STATUSES.has(s)
         ? "live"
@@ -107,7 +88,7 @@ export async function getCricketData(): Promise<CricketData> {
         ? "Live"
         : phase === "final"
           ? "Final"
-          : `${fmt(d, { hour: "numeric", minute: "2-digit", hour12: true })} ${ZONE_LABEL}`;
+          : `${fmt(d, { weekday: "short", hour: "numeric", minute: "2-digit", hour12: true })} ${ZONE_LABEL}`;
     return {
       id: e.idEvent,
       home: clean(e.strHomeTeam),

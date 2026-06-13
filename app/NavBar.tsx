@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 const SPORTS = [
   { href: "/", label: "⚽ Soccer World Cup" },
   { href: "/rugby", label: "🏉 Rugby World Cup" },
+  { href: "/rugby-internationals", label: "🏉 Rugby Internationals" },
   { href: "/cricket", label: "🏏 Cricket" },
   { href: "/nfl", label: "🏈 NFL" },
   { href: "/afl", label: "🏉 AFL" },

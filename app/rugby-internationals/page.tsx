@@ -9,21 +9,34 @@ import { IDLE_REFRESH_MS, LIVE_REFRESH_MS } from "../lib/tournamentData";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Cricket — South Africa · Australia · New Zealand",
-  description: "Recent and upcoming international cricket for South Africa, Australia and New Zealand.",
+  title: "International Rugby 2026 — Tier 1",
+  description: "2026 international rugby for the Tier 1 nations: Six Nations, The Rugby Championship and test windows.",
 };
 
-// National cricket team ids in TheSportsDB.
-const CRICKET_TEAMS = [
-  { id: "137150", key: "South Africa", label: "🇿🇦 South Africa" },
-  { id: "137146", key: "Australia", label: "🇦🇺 Australia" },
-  { id: "137145", key: "New Zealand", label: "🇳🇿 New Zealand" },
+// Tier 1 national rugby team ids in TheSportsDB.
+const TIER1 = [
+  { id: "137137", name: "South Africa" },
+  { id: "137133", name: "New Zealand" },
+  { id: "137125", name: "Australia" },
+  { id: "137123", name: "England" },
+  { id: "137130", name: "Ireland" },
+  { id: "137141", name: "Wales" },
+  { id: "137136", name: "Scotland" },
+  { id: "137128", name: "France" },
+  { id: "137175", name: "Italy" },
+  { id: "137124", name: "Argentina" },
 ];
 
-export default async function CricketPage() {
+const TOGGLE = [
+  { key: "South Africa", label: "🇿🇦 South Africa" },
+  { key: "Australia", label: "🇦🇺 Australia" },
+  { key: "New Zealand", label: "🇳🇿 New Zealand" },
+];
+
+export default async function RugbyInternationalsPage() {
   const { failed, matches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({
-    teamIds: CRICKET_TEAMS.map((t) => t.id),
-    teamSuffix: " Cricket",
+    teamIds: TIER1.map((t) => t.id),
+    teamSuffix: " Rugby",
   });
 
   return (
@@ -52,13 +65,11 @@ export default async function CricketPage() {
         </div>
         <header className="mb-8">
           <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium text-slate-400">
-            International Cricket 🏏
+            International Rugby 2026 · Tier 1 🏉
           </span>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-            South Africa · Australia · New Zealand
-          </h1>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Tests &amp; championships</h1>
           <p className="mt-2 text-sm text-slate-400">
-            All times {ZONE_LABEL} · recent results &amp; fixtures · updated {updatedLabel} ·{" "}
+            Six Nations · The Rugby Championship · test windows · all times {ZONE_LABEL} · updated {updatedLabel} ·{" "}
             {hasLive ? (
               <span className="font-medium text-rose-300">live — refreshing every minute</span>
             ) : (
@@ -69,10 +80,10 @@ export default async function CricketPage() {
 
         {failed ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 text-amber-200">
-            Couldn&apos;t reach the cricket feed right now. It&apos;ll retry automatically — check back shortly.
+            Couldn&apos;t reach the rugby feed right now. It&apos;ll retry automatically — check back shortly.
           </div>
         ) : (
-          <FixturesBoard matches={matches} teams={CRICKET_TEAMS.map((t) => ({ key: t.key, label: t.label }))} />
+          <FixturesBoard matches={matches} teams={TOGGLE} />
         )}
       </div>
       <Footer />
