@@ -1,7 +1,7 @@
 import type { GroupTable, KnockoutRound, Match, Phase, StandingRow } from "../Board";
 import type { Fixture } from "../Countdown";
 
-const BASE = "https://www.thesportsdb.com/api/v1/json/3";
+import { SPORTSDB_BASE as BASE } from "./sportsdb";
 const TZ = "America/New_York";
 export const ZONE_LABEL = "EST";
 
