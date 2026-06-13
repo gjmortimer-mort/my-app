@@ -18,6 +18,28 @@ const TOGGLE = [
   { key: "New Zealand", label: "🇳🇿 New Zealand" },
 ];
 
+// Country flag codes (flagcdn) for the U20 teams. The home nations use
+// gb-wls / gb-sct / gb-eng. Unknown names (knockout seeds) get no flag.
+const FLAG: Record<string, string> = {
+  "South Africa": "za",
+  Australia: "au",
+  "New Zealand": "nz",
+  Wales: "gb-wls",
+  Scotland: "gb-sct",
+  England: "gb-eng",
+  Ireland: "ie",
+  France: "fr",
+  Italy: "it",
+  Georgia: "ge",
+  Uruguay: "uy",
+  Japan: "jp",
+  Argentina: "ar",
+  USA: "us",
+  Fiji: "fj",
+  Spain: "es",
+};
+const flagUrl = (team: string): string | null => (FLAG[team] ? `https://flagcdn.com/w80/${FLAG[team]}.png` : null);
+
 export default async function RugbyU20Page() {
   const { failed, matches, updatedLabel, hasLive } = await getU20Data();
 
@@ -25,8 +47,8 @@ export default async function RugbyU20Page() {
     id: m.id,
     home: m.home,
     away: m.away,
-    homeBadge: null,
-    awayBadge: null,
+    homeBadge: flagUrl(m.home),
+    awayBadge: flagUrl(m.away),
     homeScore: m.homeScore != null ? String(m.homeScore) : null,
     awayScore: m.awayScore != null ? String(m.awayScore) : null,
     phase: m.phase,

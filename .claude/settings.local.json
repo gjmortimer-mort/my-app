@@ -65,7 +65,8 @@
       "Bash(sips -s format png -z 256 256 public/morts-logo.png --out app/icon.png)",
       "WebFetch(domain:www.world.rugby)",
       "Bash(curl -sL --max-time 25 -A \"Mozilla/5.0\" \"https://www.world.rugby/u20/en/matches/2026\")",
-      "Bash(grep -oE \"apiUrl[^,]{0,80}|baseUrl[^,]{0,80}|VITE_[A-Z_]+|competitionId[^,]{0,40}\")"
+      "Bash(grep -oE \"apiUrl[^,]{0,80}|baseUrl[^,]{0,80}|VITE_[A-Z_]+|competitionId[^,]{0,40}\")",
+      "Bash(curl -s --max-time 20 \"https://feeds.behold.so/bgnI2kMlP5fQTY2pPZg8\")"
     ]
   }
 }
