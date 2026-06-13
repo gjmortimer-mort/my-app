@@ -9,7 +9,7 @@ import { IDLE_REFRESH_MS, LIVE_REFRESH_MS } from "../lib/tournamentData";
 // Springbok 2026 schedule (source: sportstravel.co.za). The free feed only
 // surfaces the nearest fixture per team, so these are hard-added to guarantee
 // the full SA calendar shows; a live match for the same game takes precedence.
-type SaFixture = { date: string; opp: string; home: boolean; comp: string };
+type SaFixture = { date: string; opp: string; home: boolean; comp: string; label?: string };
 const SA_2026: SaFixture[] = [
   { date: "2026-06-20", opp: "Barbarians", home: true, comp: "Mid-year Friendly" },
   { date: "2026-07-04", opp: "England", home: true, comp: "Mid-year Tour" },
@@ -24,6 +24,7 @@ const SA_2026: SaFixture[] = [
   { date: "2026-11-07", opp: "Italy", home: false, comp: "Autumn Tour" },
   { date: "2026-11-13", opp: "France", home: false, comp: "Autumn Tour" },
   { date: "2026-11-21", opp: "Ireland", home: false, comp: "Autumn Tour" },
+  { date: "2026-11-28", opp: "TBD", home: false, comp: "Finals Weekend", label: "27–29 Nov · TBC" },
 ];
 
 function saStaticMatch(f: SaFixture): TeamMatch {
@@ -44,7 +45,7 @@ function saStaticMatch(f: SaFixture): TeamMatch {
     homeScore: null,
     awayScore: null,
     phase: "upcoming",
-    statusLabel: "Time TBC",
+    statusLabel: f.label ?? "Time TBC",
     result: "",
     competition: f.comp,
     etDateKey: f.date,
@@ -127,7 +128,7 @@ export default async function RugbyInternationalsPage() {
           <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium text-slate-400">
             International Rugby 2026 · Tier 1 🏉
           </span>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Tests &amp; championships</h1>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">International Rugby 2026</h1>
           <p className="mt-2 text-sm text-slate-400">
             Six Nations · The Rugby Championship · test windows · all times {ZONE_LABEL} · updated {updatedLabel} ·{" "}
             {hasLive ? (
