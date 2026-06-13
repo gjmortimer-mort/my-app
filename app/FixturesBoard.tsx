@@ -79,11 +79,23 @@ function MatchCard({ m }: { m: TeamMatch }) {
   );
 }
 
+type View = "all" | "scheduled" | "results";
+const VIEWS: { key: View; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "scheduled", label: "Scheduled" },
+  { key: "results", label: "Results" },
+];
+
 export default function FixturesBoard({ matches, teams }: { matches: TeamMatch[]; teams: TeamOption[] }) {
   const [team, setTeam] = useState<string>("all");
+  const [view, setView] = useState<View>("all");
   const options: TeamOption[] = [{ key: "all", label: "All teams" }, ...teams];
 
-  const visible = matches.filter((m) => team === "all" || m.home === team || m.away === team);
+  const visible = matches.filter(
+    (m) =>
+      (team === "all" || m.home === team || m.away === team) &&
+      (view === "all" || (view === "results" ? m.phase === "final" : m.phase !== "final")),
+  );
 
   const groups: { key: string; heading: string; matches: TeamMatch[] }[] = [];
   for (const m of visible) {
@@ -94,27 +106,44 @@ export default function FixturesBoard({ matches, teams }: { matches: TeamMatch[]
     }
     g.matches.push(m);
   }
+  // Results read best most-recent-first.
+  if (view === "results") groups.reverse();
 
   return (
     <div>
-      <div className="mb-6 inline-flex flex-wrap rounded-lg border border-slate-700 p-0.5">
-        {options.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTeam(t.key)}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              team === t.key ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-white"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="mb-6 flex flex-wrap gap-3">
+        <div className="inline-flex flex-wrap rounded-lg border border-slate-700 p-0.5">
+          {VIEWS.map((v) => (
+            <button
+              key={v.key}
+              onClick={() => setView(v.key)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                view === v.key ? "bg-sky-600 text-white" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+        <div className="inline-flex flex-wrap rounded-lg border border-slate-700 p-0.5">
+          {options.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTeam(t.key)}
+              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                team === t.key ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {groups.length === 0 ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-400">
-          No {team !== "all" ? `${team} ` : ""}matches to show yet. Recent results and new fixtures appear here as the
-          feed publishes them.
+          No {team !== "all" ? `${team} ` : ""}
+          {view === "results" ? "results yet" : view === "scheduled" ? "scheduled matches" : "matches to show yet"}.
         </div>
       ) : (
         <div className="space-y-8">

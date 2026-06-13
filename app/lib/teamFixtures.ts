@@ -81,6 +81,15 @@ export async function getTeamFixtures(config: TeamFixturesConfig): Promise<TeamF
 
   const clean = (name: string) => (teamSuffix && name.endsWith(teamSuffix) ? name.slice(0, -teamSuffix.length) : name);
 
+// strResult can hold a clean line ("South Africa won by 6 wickets") or a messy
+// HTML half-by-half breakdown ("First Half:<br>0 28<br>..."). Strip any tags,
+// and drop the period-by-period breakdowns entirely.
+function cleanResult(raw: string | null): string {
+  const text = (raw ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (/\b(first|second|1st|2nd)\s+half\b/i.test(text) || /\bovertime\b/i.test(text)) return "";
+  return text;
+}
+
   const matches: TeamMatch[] = events.map((e) => {
     const d = kickoff(e)!;
     const s = (e.strStatus ?? "").toUpperCase();
@@ -108,7 +117,7 @@ export async function getTeamFixtures(config: TeamFixturesConfig): Promise<TeamF
       awayScore: e.intAwayScore,
       phase,
       statusLabel,
-      result: e.strResult?.trim() ?? "",
+      result: cleanResult(e.strResult),
       competition: e.strLeague ?? "",
       etDateKey: dateKey(d),
       dateHeading: fmt(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" }),
