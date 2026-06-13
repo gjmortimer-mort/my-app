@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import AutoRefresh from "../AutoRefresh";
-import { getTournamentData } from "../lib/tournamentData";
+import { getTournamentData, IDLE_REFRESH_MS, LIVE_REFRESH_MS } from "../lib/tournamentData";
 import TvClient from "./TvClient";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Morts Bar — World Cup TV",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TvPage() {
-  const { matches, standings, fixtures, updatedLabel } = await getTournamentData({
+  const { matches, standings, fixtures, updatedLabel, hasLive } = await getTournamentData({
     leagueId: "4429",
     season: "2026",
     groupWord: "Group",
@@ -21,8 +21,8 @@ export default async function TvPage() {
 
   return (
     <>
-      {/* refresh the data into the open TV tab every 5 minutes */}
-      <AutoRefresh intervalMs={300_000} />
+      {/* refresh fast while a game is live, lazily otherwise */}
+      <AutoRefresh intervalMs={hasLive ? LIVE_REFRESH_MS : IDLE_REFRESH_MS} />
       <TvClient matches={matches} standings={standings} fixtures={fixtures} updatedLabel={updatedLabel} />
     </>
   );

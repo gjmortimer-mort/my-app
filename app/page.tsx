@@ -2,7 +2,7 @@ import Tournament from "./Tournament";
 
 // Refresh the cached data at most once an hour (ISR). The client <AutoRefresh>
 // inside Tournament then pulls the latest copy into open tabs on the same cadence.
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export default function Home() {
   return (

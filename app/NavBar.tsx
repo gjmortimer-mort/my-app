@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const PAGES = [
   { href: "/", label: "⚽ Soccer World Cup" },
   { href: "/rugby", label: "🏉 Rugby World Cup" },
+  { href: "/cricket", label: "🏏 Cricket" },
   { href: "/tv", label: "📺 TV mode" },
   { href: "/dashboard", label: "🌡️ Temperature Dashboard" },
 ];
@@ -14,7 +15,7 @@ export default function NavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+    <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur print:hidden">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-2 sm:gap-2 sm:px-6">
         {PAGES.map((p) => {
           const active = pathname === p.href;

@@ -1,19 +1,20 @@
-import AutoRefresh from "./AutoRefresh";
-import Board, { type TeamOption } from "./Board";
-import Countdown from "./Countdown";
-import Footer from "./Footer";
-import { getTournamentData, IDLE_REFRESH_MS, LIVE_REFRESH_MS, ZONE_LABEL, type DataConfig } from "./lib/tournamentData";
+import type { Metadata } from "next";
+import AutoRefresh from "../AutoRefresh";
+import Countdown from "../Countdown";
+import Footer from "../Footer";
+import CricketBoard from "./CricketBoard";
+import { CRICKET_TEAMS, ZONE_LABEL, getCricketData } from "../lib/cricketData";
+import { IDLE_REFRESH_MS, LIVE_REFRESH_MS } from "../lib/tournamentData";
 
-export type TournamentConfig = DataConfig & {
-  badge: string; // e.g. "FIFA World Cup 2026"
-  teams?: TeamOption[]; // team-filter toggle options (defaults to SA + Australia)
-  pointsNote?: string; // small print under the standings tables
+export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Cricket — South Africa · Australia · New Zealand",
+  description: "Recent and upcoming international cricket for South Africa, Australia and New Zealand.",
 };
 
-export default async function Tournament({ config }: { config: TournamentConfig }) {
-  const { badge, teams, pointsNote, season } = config;
-  const { failed, matches, fixtures, standings, knockouts, updatedLabel, hasLive } =
-    await getTournamentData(config);
+export default async function CricketPage() {
+  const { failed, matches, fixtures, updatedLabel, hasLive } = await getCricketData();
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
@@ -41,35 +42,29 @@ export default async function Tournament({ config }: { config: TournamentConfig 
         </div>
         <header className="mb-8">
           <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium text-slate-400">
-            {badge}
+            International Cricket 🏏
           </span>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Results &amp; fixtures</h1>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+            South Africa · Australia · New Zealand
+          </h1>
           <p className="mt-2 text-sm text-slate-400">
-            All times {ZONE_LABEL} · updated {updatedLabel} ·{" "}
+            All times {ZONE_LABEL} · recent results &amp; fixtures · updated {updatedLabel} ·{" "}
             {hasLive ? (
               <span className="font-medium text-rose-300">live — refreshing every minute</span>
             ) : (
-              "live scores refresh every minute during games"
+              "refreshes automatically"
             )}
           </p>
         </header>
 
         {failed ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 text-amber-200">
-            Couldn&apos;t reach the scores feed right now. It&apos;ll retry automatically — check back shortly.
-          </div>
-        ) : matches.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-400">
-            No matches scheduled yet for the {season} season. They&apos;ll appear here as soon as fixtures are
-            published.
+            Couldn&apos;t reach the cricket feed right now. It&apos;ll retry automatically — check back shortly.
           </div>
         ) : (
-          <Board
+          <CricketBoard
             matches={matches}
-            teams={teams}
-            standings={standings}
-            knockouts={knockouts}
-            pointsNote={pointsNote}
+            teams={CRICKET_TEAMS.map((t) => ({ key: t.key, label: t.label }))}
           />
         )}
       </div>

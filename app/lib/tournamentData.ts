@@ -21,7 +21,12 @@ export type TournamentData = {
   standings: GroupTable[];
   knockouts: KnockoutRound[];
   updatedLabel: string;
+  hasLive: boolean;
 };
+
+// While a match is in progress we want near-live scores; otherwise stay lazy.
+export const LIVE_REFRESH_MS = 60_000;
+export const IDLE_REFRESH_MS = 600_000;
 
 type ApiEvent = {
   idEvent: string;
@@ -81,7 +86,9 @@ function statusLabel(e: ApiEvent, phase: Phase, d: Date | null): string {
 
 async function getJson(url: string): Promise<ApiEvent[] | null> {
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 } });
+    // Re-fetch at most once a minute so live scores stay fresh; the per-visitor
+    // load is deduped by Next's cache regardless of how many people are watching.
+    const res = await fetch(url, { next: { revalidate: 60 } });
     if (!res.ok) return null;
     const data = (await res.json()) as { events: ApiEvent[] | null };
     return data.events ?? [];
@@ -231,6 +238,7 @@ export async function getTournamentData(config: DataConfig): Promise<TournamentD
     .map(({ label, matches }) => ({ label, matches }));
 
   const updatedLabel = `${fmt(new Date(), { hour: "numeric", minute: "2-digit", hour12: true })} ${ZONE_LABEL}`;
+  const hasLive = matches.some((m) => m.phase === "live");
 
-  return { failed, matches, fixtures, standings, knockouts, updatedLabel };
+  return { failed, matches, fixtures, standings, knockouts, updatedLabel, hasLive };
 }

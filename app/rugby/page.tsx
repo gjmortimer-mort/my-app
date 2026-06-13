@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Tournament from "../Tournament";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Rugby World Cup 2027 — Results & Fixtures",
