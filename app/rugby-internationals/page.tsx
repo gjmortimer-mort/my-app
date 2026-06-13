@@ -61,6 +61,21 @@ function saKey(m: TeamMatch): string | null {
   return null;
 }
 
+// Flag fallback for any team not found in the live feed's badges.
+const FLAG: Record<string, string> = {
+  "South Africa": "za",
+  "New Zealand": "nz",
+  Australia: "au",
+  England: "gb-eng",
+  Ireland: "ie",
+  Wales: "gb-wls",
+  Scotland: "gb-sct",
+  France: "fr",
+  Italy: "it",
+  Argentina: "ar",
+};
+const flagUrl = (team: string): string | null => (FLAG[team] ? `https://flagcdn.com/w80/${FLAG[team]}.png` : null);
+
 export const revalidate = 60;
 
 export const metadata: Metadata = {
@@ -94,10 +109,21 @@ export default async function RugbyInternationalsPage() {
     teamSuffix: " Rugby",
   });
 
+  // Reuse the badges the live feed already carries (same style as the rest of
+  // the list), falling back to a country flag when a team isn't in the feed.
+  const badgeOf = new Map<string, string>();
+  for (const m of liveMatches) {
+    if (m.homeBadge) badgeOf.set(m.home, m.homeBadge);
+    if (m.awayBadge) badgeOf.set(m.away, m.awayBadge);
+  }
+  const badge = (team: string): string | null => badgeOf.get(team) ?? flagUrl(team);
+
   // Merge the hard-coded Springbok schedule with the live feed: live games win,
   // static fixtures fill every gap, so all SA games always show.
   const liveSaKeys = new Set(liveMatches.map(saKey).filter(Boolean));
-  const extraSa = SA_2026.map(saStaticMatch).filter((m) => !liveSaKeys.has(saKey(m)!));
+  const extraSa = SA_2026.map(saStaticMatch)
+    .filter((m) => !liveSaKeys.has(saKey(m)!))
+    .map((m) => ({ ...m, homeBadge: badge(m.home), awayBadge: badge(m.away) }));
   const matches = [...liveMatches, ...extraSa].sort((a, b) => a.etDateKey.localeCompare(b.etDateKey));
 
   return (
