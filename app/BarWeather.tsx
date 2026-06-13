@@ -51,10 +51,9 @@ export default function BarWeather() {
   return (
     <div className="flex items-center gap-2 rounded-lg bg-slate-900/60 px-2.5 py-1 text-sm text-slate-300" title="Pittsboro, NC">
       <span className="tabular-nums">{time}</span>
-      <span className="text-slate-600">·</span>
-      <span className="font-medium text-slate-200">Pittsboro</span>
       {wx && (
         <>
+          <span className="text-slate-600">·</span>
           <span aria-hidden className="text-base leading-none">{wx.icon}</span>
           <span className="tabular-nums">
             {wx.f}°F <span className="text-slate-500">/</span> {wx.c}°C
