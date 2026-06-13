@@ -7,6 +7,7 @@ const PAGES = [
   { href: "/", label: "⚽ Soccer World Cup" },
   { href: "/rugby", label: "🏉 Rugby World Cup" },
   { href: "/cricket", label: "🏏 Cricket" },
+  { href: "/socials", label: "📸 Socials" },
   { href: "/tv", label: "📺 TV mode" },
   { href: "/dashboard", label: "🌡️ Temperature Dashboard" },
 ];
