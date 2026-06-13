@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import QRCode from "qrcode";
 import Footer from "../Footer";
+import BeholdFeed from "./BeholdFeed";
+
+const BEHOLD_FEED_ID = "bgnI2kMlP5fQTY2pPZg8";
 
 export const metadata: Metadata = {
   title: "Morts Bar — Socials",
@@ -106,17 +109,12 @@ export default async function SocialsPage() {
           ))}
         </section>
 
-        {/* feed placeholder — drops in once a feed source is connected */}
+        {/* live Instagram feed via Behold (auto-updating) */}
         <section className="mt-10">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Latest from @{IG_HANDLE}
           </h2>
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 p-8 text-center text-slate-400">
-            <p>The live post feed will appear here once the account is connected.</p>
-            <a href={IG_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-medium text-fuchsia-300 hover:text-fuchsia-200">
-              See the latest on Instagram →
-            </a>
-          </div>
+          <BeholdFeed feedId={BEHOLD_FEED_ID} />
         </section>
       </div>
       <Footer />
