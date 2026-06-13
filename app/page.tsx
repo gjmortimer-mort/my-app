@@ -30,9 +30,9 @@ export default function Home() {
         <div className="relative mx-auto max-w-4xl px-6 py-20 text-center sm:py-28">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://flagcdn.com/w640/za.png"
-            alt="Flag of South Africa"
-            className="mx-auto h-16 w-auto rounded-md shadow-lg ring-1 ring-white/10 sm:h-20"
+            src="/morts-logo.png"
+            alt="Morts Bar"
+            className="mx-auto h-16 w-16 rounded-full shadow-lg ring-1 ring-white/10 sm:h-20 sm:w-20"
           />
           <h1
             className="mt-6 text-5xl leading-tight text-amber-300 sm:text-7xl"

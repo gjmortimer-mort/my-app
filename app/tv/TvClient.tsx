@@ -146,9 +146,9 @@ export default function TvClient({
         <div className="flex items-center gap-5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://flagcdn.com/w640/za.png"
-            alt="Flag of South Africa"
-            className="h-16 w-auto rounded-md shadow-lg ring-1 ring-white/10"
+            src="/morts-logo.png"
+            alt="Morts Bar"
+            className="h-16 w-16 rounded-full shadow-lg ring-1 ring-white/10 sm:h-20 sm:w-20"
           />
           <span
             className="text-4xl text-amber-300"

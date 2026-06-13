@@ -23,9 +23,9 @@ export default async function Tournament({ config }: { config: TournamentConfig 
           <div className="flex items-center gap-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://flagcdn.com/w640/za.png"
-              alt="Flag of South Africa"
-              className="h-16 w-auto rounded-md shadow-lg ring-1 ring-white/10 sm:h-20"
+              src="/morts-logo.png"
+              alt="Morts Bar"
+              className="h-16 w-16 rounded-full shadow-lg ring-1 ring-white/10 sm:h-20 sm:w-20"
             />
             <span
               className="text-2xl leading-tight text-amber-300 sm:text-4xl"

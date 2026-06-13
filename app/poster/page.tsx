@@ -21,7 +21,7 @@ export default async function PosterPage() {
       <div className="w-full max-w-md rounded-3xl bg-white p-10 text-center text-slate-900 shadow-2xl print:rounded-none print:shadow-none">
         <div className="flex items-center justify-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="https://flagcdn.com/w160/za.png" alt="South Africa" className="h-7 w-auto rounded-sm ring-1 ring-black/10" />
+          <img src="/morts-logo.png" alt="Morts Bar" className="h-7 w-7 rounded-full ring-1 ring-black/10" />
           <span
             className="text-2xl text-amber-700"
             style={{ fontFamily: "var(--font-display)" }}
