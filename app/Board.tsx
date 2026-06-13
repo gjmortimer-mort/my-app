@@ -243,12 +243,14 @@ export default function Board({
   standings = [],
   knockouts = [],
   pointsNote,
+  views,
 }: {
   matches: Match[];
   teams?: TeamOption[];
   standings?: GroupTable[];
   knockouts?: KnockoutRound[];
   pointsNote?: string;
+  views?: View[]; // which view tabs to show (defaults to all)
 }) {
   const teamOptions: TeamOption[] = [{ key: "all", label: "All teams" }, ...teams];
   const today = todayKeyET();
@@ -283,13 +285,14 @@ export default function Board({
   // Results read best most-recent-first.
   if (view === "results") groups.reverse();
 
-  const VIEWS: { key: View; label: string }[] = [
+  const ALL_VIEWS: { key: View; label: string }[] = [
     { key: "today", label: "Today" },
     { key: "all", label: "Full schedule" },
     { key: "results", label: "Results" },
     { key: "standings", label: "Standings" },
     { key: "knockouts", label: "Knockouts" },
   ];
+  const VIEWS = views ? ALL_VIEWS.filter((v) => views.includes(v.key)) : ALL_VIEWS;
 
   return (
     <div>
