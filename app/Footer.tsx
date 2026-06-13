@@ -1,7 +1,7 @@
 const BAR = {
   name: "Morts Bar on Old Graham",
   blurb: "All the soccer, rugby and cricket action — from my place to yours.",
-  instagram: "morts.bar",
+  instagrams: ["morts.bar", "lollybfitness"],
 };
 
 export default function Footer() {
@@ -18,14 +18,19 @@ export default function Footer() {
           {BAR.name}
         </p>
         <p className="max-w-xs text-sm leading-6 text-slate-400">{BAR.blurb}</p>
-        <a
-          href={`https://instagram.com/${BAR.instagram}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 to-rose-500 px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03]"
-        >
-          📷 @{BAR.instagram}
-        </a>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {BAR.instagrams.map((handle) => (
+            <a
+              key={handle}
+              href={`https://instagram.com/${handle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 to-rose-500 px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.03]"
+            >
+              📷 @{handle}
+            </a>
+          ))}
+        </div>
       </div>
       <div className="border-t border-slate-800/60 px-4 py-4 text-center text-xs text-slate-600 sm:px-6">
         Scores &amp; fixtures from TheSportsDB · times shown in US Eastern (EST)
