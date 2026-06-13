@@ -15,7 +15,7 @@ const IG_HANDLE = "morts.bar";
 const IG_URL = `https://instagram.com/${IG_HANDLE}`;
 
 const SPORTS = [
-  { emoji: "⚽", name: "Soccer", href: "/", ring: "hover:border-emerald-500/60", glow: "from-emerald-500/20" },
+  { emoji: "⚽", name: "Soccer", href: "/soccer", ring: "hover:border-emerald-500/60", glow: "from-emerald-500/20" },
   { emoji: "🏉", name: "Rugby", href: "/rugby", ring: "hover:border-amber-500/60", glow: "from-amber-500/20" },
   { emoji: "🏏", name: "Cricket", href: "/cricket", ring: "hover:border-sky-500/60", glow: "from-sky-500/20" },
 ];

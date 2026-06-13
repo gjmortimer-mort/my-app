@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const SPORTS = [
-  { href: "/", label: "⚽ Soccer World Cup" },
+  { href: "/soccer", label: "⚽ Soccer World Cup" },
   { href: "/rugby", label: "🏉 Rugby World Cup" },
   { href: "/rugby-internationals", label: "🏉 Rugby Internationals" },
   { href: "/cricket", label: "🏏 Cricket" },
@@ -52,6 +52,14 @@ export default function NavBar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur print:hidden">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-2 sm:gap-2 sm:px-6">
+        <Link
+          href="/"
+          aria-current={pathname === "/" ? "page" : undefined}
+          className={`${base} mr-1 font-semibold ${pathname === "/" ? activeCls : idleCls}`}
+        >
+          🍺 Morts Bar
+        </Link>
+
         <div ref={ref} className="relative">
           <button
             onClick={() => setOpen((o) => !o)}
