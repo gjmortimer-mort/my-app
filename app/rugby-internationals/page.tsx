@@ -2,9 +2,63 @@ import type { Metadata } from "next";
 import AutoRefresh from "../AutoRefresh";
 import Countdown from "../Countdown";
 import Footer from "../Footer";
-import FixturesBoard from "../FixturesBoard";
+import FixturesBoard, { type TeamMatch } from "../FixturesBoard";
 import { getTeamFixtures, ZONE_LABEL } from "../lib/teamFixtures";
 import { IDLE_REFRESH_MS, LIVE_REFRESH_MS } from "../lib/tournamentData";
+
+// Springbok 2026 schedule (source: sportstravel.co.za). The free feed only
+// surfaces the nearest fixture per team, so these are hard-added to guarantee
+// the full SA calendar shows; a live match for the same game takes precedence.
+type SaFixture = { date: string; opp: string; home: boolean; comp: string };
+const SA_2026: SaFixture[] = [
+  { date: "2026-06-20", opp: "Barbarians", home: true, comp: "Mid-year Friendly" },
+  { date: "2026-07-04", opp: "England", home: true, comp: "Mid-year Tour" },
+  { date: "2026-07-11", opp: "Scotland", home: true, comp: "Mid-year Tour" },
+  { date: "2026-07-18", opp: "Wales", home: true, comp: "Mid-year Tour" },
+  { date: "2026-08-08", opp: "Argentina", home: false, comp: "Rugby Championship" },
+  { date: "2026-08-22", opp: "New Zealand", home: true, comp: "Test Series" },
+  { date: "2026-08-29", opp: "New Zealand", home: true, comp: "Test Series" },
+  { date: "2026-09-05", opp: "New Zealand", home: true, comp: "Test Series" },
+  { date: "2026-09-12", opp: "New Zealand", home: false, comp: "Test Series" },
+  { date: "2026-09-27", opp: "Australia", home: false, comp: "Rugby Championship" },
+  { date: "2026-11-07", opp: "Italy", home: false, comp: "Autumn Tour" },
+  { date: "2026-11-13", opp: "France", home: false, comp: "Autumn Tour" },
+  { date: "2026-11-21", opp: "Ireland", home: false, comp: "Autumn Tour" },
+];
+
+function saStaticMatch(f: SaFixture): TeamMatch {
+  const d = new Date(`${f.date}T12:00:00Z`);
+  const heading = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(d);
+  return {
+    id: `sa-${f.date}`,
+    home: f.home ? "South Africa" : f.opp,
+    away: f.home ? f.opp : "South Africa",
+    homeBadge: null,
+    awayBadge: null,
+    homeScore: null,
+    awayScore: null,
+    phase: "upcoming",
+    statusLabel: "Time TBC",
+    result: "",
+    competition: f.comp,
+    etDateKey: f.date,
+    dateHeading: heading,
+  };
+}
+
+// Key a South-Africa match by opponent + date so the live feed can supersede
+// the static fixture for the same game.
+function saKey(m: TeamMatch): string | null {
+  if (m.home === "South Africa") return `${m.away}|${m.etDateKey}`;
+  if (m.away === "South Africa") return `${m.home}|${m.etDateKey}`;
+  return null;
+}
 
 export const revalidate = 60;
 
@@ -34,10 +88,16 @@ const TOGGLE = [
 ];
 
 export default async function RugbyInternationalsPage() {
-  const { failed, matches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({
+  const { failed, matches: liveMatches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({
     teamIds: TIER1.map((t) => t.id),
     teamSuffix: " Rugby",
   });
+
+  // Merge the hard-coded Springbok schedule with the live feed: live games win,
+  // static fixtures fill every gap, so all SA games always show.
+  const liveSaKeys = new Set(liveMatches.map(saKey).filter(Boolean));
+  const extraSa = SA_2026.map(saStaticMatch).filter((m) => !liveSaKeys.has(saKey(m)!));
+  const matches = [...liveMatches, ...extraSa].sort((a, b) => a.etDateKey.localeCompare(b.etDateKey));
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">

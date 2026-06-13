@@ -50,7 +50,8 @@
       "Bash(curl -s --max-time 15 \"https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4574&s=2027\")",
       "Bash(curl -s --max-time 15 \"https://flagcdn.com/za.svg\" -o /tmp/za.svg)",
       "Read(//tmp/**)",
-      "Bash(curl -s -o /dev/null -w \"widget.js status=%{http_code} type=%{content_type}\\\\n\" --max-time 15 \"https://w.behold.so/widget.js\")"
+      "Bash(curl -s -o /dev/null -w \"widget.js status=%{http_code} type=%{content_type}\\\\n\" --max-time 15 \"https://w.behold.so/widget.js\")",
+      "WebFetch(domain:sportstravel.co.za)"
     ]
   }
 }
