@@ -15,6 +15,7 @@ const TILES = [
   { href: "/nfl", emoji: "🏈", title: "NFL", desc: "2026 schedule · go Panthers", glow: "from-orange-500/25", ring: "hover:border-orange-500/60" },
   { href: "/afl", emoji: "🏉", title: "AFL", desc: "Aussie rules · go Tigers", glow: "from-yellow-500/25", ring: "hover:border-yellow-500/60" },
   { href: "/stanley-cup", emoji: "🏒", title: "Stanley Cup", desc: "Go Canes! 🌀 NHL Final 2026", glow: "from-red-500/25", ring: "hover:border-red-500/60" },
+  { href: "/nba-finals", emoji: "🏀", title: "NBA Finals", desc: "Spurs vs Knicks 2026", glow: "from-orange-500/25", ring: "hover:border-orange-500/60" },
   { href: "/tv", emoji: "📺", title: "TV Mode", desc: "Full-screen scoreboard for the big screen", glow: "from-rose-500/25", ring: "hover:border-rose-500/60" },
   { href: "/dashboard", emoji: "🌡️", title: "Temperature Dashboard", desc: "Live weather around the world", glow: "from-cyan-500/25", ring: "hover:border-cyan-500/60" },
   { href: "/socials", emoji: "📸", title: "Socials", desc: "Follow @morts.bar", glow: "from-fuchsia-500/25", ring: "hover:border-fuchsia-500/60" },

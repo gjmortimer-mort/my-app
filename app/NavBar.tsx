@@ -12,6 +12,7 @@ const SPORTS = [
   { href: "/nfl", label: "🏈 NFL" },
   { href: "/afl", label: "🏉 AFL" },
   { href: "/stanley-cup", label: "🏒 Stanley Cup" },
+  { href: "/nba-finals", label: "🏀 NBA Finals" },
 ];
 
 const LINKS = [
