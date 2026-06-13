@@ -235,7 +235,7 @@ function KnockoutView({ knockouts }: { knockouts: KnockoutRound[] }) {
 }
 
 // ---- The board -------------------------------------------------------------
-type View = "today" | "all" | "standings" | "knockouts";
+type View = "today" | "all" | "results" | "standings" | "knockouts";
 
 export default function Board({
   matches,
@@ -258,11 +258,12 @@ export default function Board({
 
   const live = matches.filter((m) => m.phase === "live");
 
-  const visible = matches.filter(
-    (m) =>
-      (view !== "today" || m.etDateKey === today) &&
-      (team === "all" || m.home === team || m.away === team),
-  );
+  const visible = matches.filter((m) => {
+    if (team !== "all" && m.home !== team && m.away !== team) return false;
+    if (view === "today") return m.etDateKey === today;
+    if (view === "results") return m.phase === "final";
+    return true; // "all"
+  });
 
   // Selecting a specific team shows all of that team's games (not just today's).
   function pickTeam(t: string) {
@@ -279,10 +280,13 @@ export default function Board({
     }
     g.matches.push(m);
   }
+  // Results read best most-recent-first.
+  if (view === "results") groups.reverse();
 
   const VIEWS: { key: View; label: string }[] = [
     { key: "today", label: "Today" },
     { key: "all", label: "Full schedule" },
+    { key: "results", label: "Results" },
     { key: "standings", label: "Standings" },
     { key: "knockouts", label: "Knockouts" },
   ];
@@ -306,7 +310,7 @@ export default function Board({
           ))}
         </div>
 
-        {(view === "today" || view === "all") && (
+        {(view === "today" || view === "all" || view === "results") && (
           <div className="inline-flex flex-wrap rounded-lg border border-slate-700 p-0.5">
             {teamOptions.map((t) => (
               <button
@@ -329,7 +333,8 @@ export default function Board({
         <KnockoutView knockouts={knockouts} />
       ) : groups.length === 0 ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-400">
-          No {team !== "all" ? `${team} ` : ""}matches {view === "today" ? "today" : "scheduled"}.{" "}
+          No {team !== "all" ? `${team} ` : ""}
+          {view === "results" ? "completed games yet" : `matches ${view === "today" ? "today" : "scheduled"}`}.{" "}
           <button
             onClick={() => {
               setView("all");
