@@ -52,7 +52,12 @@
       "Read(//tmp/**)",
       "Bash(curl -s -o /dev/null -w \"widget.js status=%{http_code} type=%{content_type}\\\\n\" --max-time 15 \"https://w.behold.so/widget.js\")",
       "WebFetch(domain:sportstravel.co.za)",
-      "WebFetch(domain:www.sportsnet.ca)"
+      "WebFetch(domain:www.sportsnet.ca)",
+      "Bash(curl -s -o /dev/null -w 'lookuptable -> %{http_code}\\\\n' --max-time 15 'https://www.thesportsdb.com/api/v1/json/4358440627/lookuptable.php?l=4429&s=2026')",
+      "Bash(curl -s --max-time 15 'https://www.thesportsdb.com/api/v1/json/4358440627/lookuptable.php?l=4429&s=2026')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); t=d.get\\('table'\\) or []; print\\('table rows:',len\\(t\\)\\); print\\(t[0].get\\('strTeam'\\),'| group/desc:',t[0].get\\('strGroup'\\) or t[0].get\\('intRank'\\)\\) if t else print\\('empty'\\)\")",
+      "Bash(python3 -c \"import sys,json; t=json.load\\(sys.stdin\\).get\\('table'\\) or []; print\\('rows:',len\\(t\\),'| sample:',\\(t[0]['strTeam'],t[0].get\\('strGroup'\\)\\) if t else 'empty'\\)\")",
+      "Bash(THESPORTSDB_KEY=4358440627 node -e ' *)"
     ]
   }
 }

@@ -79,16 +79,14 @@ async function getJson(url: string): Promise<ApiEvent[] | null> {
 
 export async function getLeagueSchedule(config: LeagueScheduleConfig): Promise<LeagueData> {
   const { leagueId, season, rounds, roundWord, teamSuffix } = config;
-  const feeds = await Promise.all(
-    rounds.map((r) => getJson(`${BASE}/eventsround.php?id=${leagueId}&r=${r}&s=${season}`)),
-  );
-  const failed = feeds.every((f) => f === null);
+  // One season call returns the whole schedule; keep only the configured
+  // rounds (regular-season weeks), dropping preseason/playoff round codes.
+  const all = await getJson(`${BASE}/eventsseason.php?id=${leagueId}&s=${season}`);
+  const failed = all === null;
 
-  const byId = new Map<string, ApiEvent>();
-  for (const e of feeds.flatMap((f) => f ?? [])) byId.set(e.idEvent, e);
-
-  const events = [...byId.values()]
-    .filter((e) => kickoff(e))
+  const roundSet = new Set(rounds.map(String));
+  const events = (all ?? [])
+    .filter((e) => roundSet.has(e.intRound ?? "") && kickoff(e))
     .sort((a, b) => kickoff(a)!.getTime() - kickoff(b)!.getTime());
 
   const clean = (name: string) =>

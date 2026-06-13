@@ -97,6 +97,35 @@ async function getJson(url: string): Promise<ApiEvent[] | null> {
   }
 }
 
+type TableRow = {
+  strTeam: string;
+  strBadge: string | null;
+  strGroup: string | null; // "Group A" / "Pool A"
+  intPlayed?: string;
+  intWin?: string;
+  intDraw?: string;
+  intLoss?: string;
+  intGoalsFor?: string;
+  intGoalsAgainst?: string;
+  intGoalDifference?: string;
+  intPoints?: string;
+};
+
+// The official standings table (premium endpoint). Returns [] if a season has
+// no table yet (e.g. a future tournament), null only on a real fetch failure.
+async function getTable(url: string): Promise<TableRow[] | null> {
+  try {
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { table?: TableRow[] | null };
+    return data.table ?? [];
+  } catch {
+    return null;
+  }
+}
+
+const groupLetter = (g: string | null | undefined) => (g ?? "").replace(/^(group|pool)\s+/i, "").trim();
+
 function knockoutLabel(roundCode: string, gameCount: number): string {
   if (ROUND_LABELS[roundCode]) return ROUND_LABELS[roundCode];
   if (gameCount >= 12) return "Round of 32";
@@ -107,41 +136,36 @@ function knockoutLabel(roundCode: string, gameCount: number): string {
 }
 
 export async function getTournamentData(config: DataConfig): Promise<TournamentData> {
-  const { leagueId, season, groupWord, rounds, teamSuffix, pointsScheme } = config;
+  const { leagueId, season, groupWord, rounds, teamSuffix } = config;
 
-  const seasonUrl = `${BASE}/eventsseason.php?id=${leagueId}&s=${season}`;
-  const roundUrls = rounds.map((r) => `${BASE}/eventsround.php?id=${leagueId}&r=${r}&s=${season}`);
-  const feeds = await Promise.all([getJson(seasonUrl), ...roundUrls.map(getJson)]);
-  const failed = feeds.every((f) => f === null);
+  const [seasonEvents, table] = await Promise.all([
+    getJson(`${BASE}/eventsseason.php?id=${leagueId}&s=${season}`),
+    getTable(`${BASE}/lookuptable.php?l=${leagueId}&s=${season}`),
+  ]);
+  const failed = seasonEvents === null;
 
-  // Merge feeds by event id, preferring whichever copy has score/status/group.
-  const byId = new Map<string, ApiEvent>();
-  for (const e of feeds.flatMap((f) => f ?? [])) {
-    const prev = byId.get(e.idEvent);
-    byId.set(
-      e.idEvent,
-      prev
-        ? {
-            ...prev,
-            ...e,
-            strGroup: e.strGroup ?? prev.strGroup,
-            intHomeScore: e.intHomeScore ?? prev.intHomeScore,
-            intAwayScore: e.intAwayScore ?? prev.intAwayScore,
-            strStatus: e.strStatus ?? prev.strStatus,
-          }
-        : e,
-    );
-  }
-  const events = [...byId.values()]
+  const events = (seasonEvents ?? [])
     .filter((e) => kickoff(e))
     .sort((a, b) => kickoff(a)!.getTime() - kickoff(b)!.getTime());
 
   const clean = (name: string) =>
     teamSuffix && name.endsWith(teamSuffix) ? name.slice(0, -teamSuffix.length) : name;
 
+  // team -> group letter, taken from the official standings table
+  const teamGroup = new Map<string, string>();
+  for (const r of table ?? []) {
+    const letter = groupLetter(r.strGroup);
+    if (letter) teamGroup.set(r.strTeam, letter);
+  }
+
+  const groupRounds = new Set(rounds.map(String));
+  const groupOf = (e: ApiEvent): string =>
+    groupRounds.has(e.intRound ?? "") ? (teamGroup.get(e.strHomeTeam) ?? teamGroup.get(e.strAwayTeam) ?? "") : "";
+
   const toMatch = (e: ApiEvent): Match => {
     const d = kickoff(e)!;
     const phase = classify(e);
+    const g = groupOf(e);
     return {
       id: e.idEvent,
       home: clean(e.strHomeTeam),
@@ -152,7 +176,7 @@ export async function getTournamentData(config: DataConfig): Promise<TournamentD
       awayScore: e.intAwayScore,
       phase,
       statusLabel: statusLabel(e, phase, d),
-      groupLabel: e.strGroup ? `${groupWord} ${e.strGroup}` : "",
+      groupLabel: g ? `${groupWord} ${g}` : "",
       etDateKey: dateKey(d),
       dateHeading: fmt(d, { weekday: "long", month: "long", day: "numeric" }),
     };
@@ -166,64 +190,39 @@ export async function getTournamentData(config: DataConfig): Promise<TournamentD
     away: clean(e.strAwayTeam),
   }));
 
-  // ---- Standings: completed group-stage games only -----------------------
-  const [winPts, drawPts] = pointsScheme === "rugby" ? [4, 2] : [3, 1];
-  const tables = new Map<string, Map<string, StandingRow>>();
-
-  const groupRounds = new Set(rounds.map(String));
-  for (const e of events) {
-    if (!e.strGroup || !groupRounds.has(e.intRound ?? "")) continue;
-    const grp = e.strGroup;
-    if (!tables.has(grp)) tables.set(grp, new Map());
-    const table = tables.get(grp)!;
-    for (const [name, badge] of [
-      [e.strHomeTeam, e.strHomeTeamBadge],
-      [e.strAwayTeam, e.strAwayTeamBadge],
-    ] as const) {
-      if (!table.has(name))
-        table.set(name, {
-          team: clean(name),
-          badge,
-          played: 0,
-          won: 0,
-          drawn: 0,
-          lost: 0,
-          scoreFor: 0,
-          scoreAgainst: 0,
-          diff: 0,
-          points: 0,
-        });
-    }
-    if (classify(e) !== "final" || e.intHomeScore == null || e.intAwayScore == null) continue;
-    const hs = Number(e.intHomeScore);
-    const as = Number(e.intAwayScore);
-    const home = table.get(e.strHomeTeam)!;
-    const away = table.get(e.strAwayTeam)!;
-    home.played++; away.played++;
-    home.scoreFor += hs; home.scoreAgainst += as;
-    away.scoreFor += as; away.scoreAgainst += hs;
-    if (hs > as) { home.won++; home.points += winPts; away.lost++; }
-    else if (hs < as) { away.won++; away.points += winPts; home.lost++; }
-    else { home.drawn++; away.drawn++; home.points += drawPts; away.points += drawPts; }
+  // ---- Standings: straight from the official table -----------------------
+  const byGroup = new Map<string, StandingRow[]>();
+  for (const r of table ?? []) {
+    const letter = groupLetter(r.strGroup);
+    if (!letter) continue;
+    if (!byGroup.has(letter)) byGroup.set(letter, []);
+    byGroup.get(letter)!.push({
+      team: clean(r.strTeam),
+      badge: r.strBadge ?? null,
+      played: Number(r.intPlayed ?? 0),
+      won: Number(r.intWin ?? 0),
+      drawn: Number(r.intDraw ?? 0),
+      lost: Number(r.intLoss ?? 0),
+      scoreFor: Number(r.intGoalsFor ?? 0),
+      scoreAgainst: Number(r.intGoalsAgainst ?? 0),
+      diff: Number(r.intGoalDifference ?? 0),
+      points: Number(r.intPoints ?? 0),
+    });
   }
-
-  const standings: GroupTable[] = [...tables.entries()]
+  const standings: GroupTable[] = [...byGroup.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([group, table]) => ({
-      group: `${groupWord} ${group}`,
-      rows: [...table.values()]
-        .map((r) => ({ ...r, diff: r.scoreFor - r.scoreAgainst }))
-        .sort(
-          (a, b) =>
-            b.points - a.points || b.diff - a.diff || b.scoreFor - a.scoreFor || a.team.localeCompare(b.team),
-        ),
+    .map(([letter, rows]) => ({
+      group: `${groupWord} ${letter}`,
+      rows: rows.sort(
+        (a, b) => b.points - a.points || b.diff - a.diff || b.scoreFor - a.scoreFor || a.team.localeCompare(b.team),
+      ),
     }));
 
-  // ---- Knockouts: games outside the group-stage rounds -------------------
+  // ---- Knockouts: games outside the group rounds -------------------------
   const koByRound = new Map<string, ApiEvent[]>();
   for (const e of events) {
+    if (groupRounds.has(e.intRound ?? "")) continue;
     const r = e.intRound ?? "";
-    if (groupRounds.has(r) || e.strGroup) continue;
     if (!koByRound.has(r)) koByRound.set(r, []);
     koByRound.get(r)!.push(e);
   }
