@@ -46,25 +46,34 @@ function kickoff(e: ApiEvent): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-async function getJson(url: string): Promise<ApiEvent[]> {
-  try {
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    if (!res.ok) return [];
-    const data = (await res.json()) as { events?: ApiEvent[] | null; results?: ApiEvent[] | null };
-    return data.events ?? data.results ?? [];
-  } catch {
-    return [];
+// Returns the events array on success (possibly empty), or null on a real
+// failure (network error or rate-limit 429) after a retry — so callers can
+// tell "no games" apart from "couldn't reach the feed".
+async function getJson(url: string): Promise<ApiEvent[] | null> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, { next: { revalidate: 60 } });
+      if (res.ok) {
+        const data = (await res.json()) as { events?: ApiEvent[] | null; results?: ApiEvent[] | null };
+        return data.events ?? data.results ?? [];
+      }
+    } catch {
+      // fall through to retry
+    }
+    if (attempt === 0) await new Promise((r) => setTimeout(r, 500)); // brief back-off
   }
+  return null;
 }
 
 export async function getTeamFixtures(config: TeamFixturesConfig): Promise<TeamFixturesData> {
   const { teamIds, teamSuffix } = config;
   const urls = teamIds.flatMap((id) => [`${BASE}/eventslast.php?id=${id}`, `${BASE}/eventsnext.php?id=${id}`]);
   const results = await Promise.all(urls.map(getJson));
-  const failed = results.every((r) => r.length === 0);
+  // Only treat as failed if every request errored (vs. genuinely returning no games).
+  const failed = results.every((r) => r === null);
 
   const byId = new Map<string, ApiEvent>();
-  for (const e of results.flat()) if (e.idEvent) byId.set(e.idEvent, e);
+  for (const e of results.flatMap((r) => r ?? [])) if (e.idEvent) byId.set(e.idEvent, e);
 
   const events = [...byId.values()]
     .filter((e) => kickoff(e))
