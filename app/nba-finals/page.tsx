@@ -73,8 +73,12 @@ export default async function NbaFinalsPage() {
         </div>
 
         {/* series hero */}
-        <section className="mb-8 overflow-hidden rounded-3xl border border-orange-500/40 bg-gradient-to-br from-orange-500/20 via-orange-500/8 to-slate-900 p-8 text-center">
+        <section className="mb-8 overflow-hidden rounded-3xl border border-orange-500/40 bg-gradient-to-br from-blue-600/20 via-orange-500/10 to-slate-900 p-8 text-center">
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-orange-300">🏀 NBA Finals 2026</p>
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+            Go Knicks! <span className="text-orange-400">🗽</span>
+          </h1>
+          <p className="mt-2 text-sm text-slate-300">All in behind the New York Knicks for the title. 🧡💙</p>
           <div className="mt-6 flex items-center justify-center gap-6 sm:gap-10">
             <div className="text-right">
               <div className="text-lg font-semibold text-white sm:text-xl">🌶️ Spurs</div>
