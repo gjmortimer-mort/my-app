@@ -2,14 +2,19 @@ import type { Match, Phase } from "../Board";
 import type { Fixture } from "../Countdown";
 
 const BASE = "https://www.thesportsdb.com/api/v1/json/3";
-const LEAGUE = "4391";
 const TZ = "America/New_York";
 export const ZONE_LABEL = "EST";
 
-// Regular-season weeks 1–18 give the complete 272-game schedule.
-const WEEKS = Array.from({ length: 18 }, (_, i) => i + 1);
+// A round-based league with no group stage (NFL weeks, AFL rounds, etc.).
+export type LeagueScheduleConfig = {
+  leagueId: string;
+  season: string;
+  rounds: number[]; // round numbers that hold the schedule
+  roundWord: string; // "Week" (NFL) or "Round" (AFL) — shown on each game
+  teamSuffix?: string; // e.g. " Football Club" — stripped from names for display
+};
 
-export type NflData = {
+export type LeagueData = {
   failed: boolean;
   matches: Match[];
   fixtures: Fixture[];
@@ -28,7 +33,7 @@ type ApiEvent = {
   strTimestamp: string | null;
   strStatus: string | null;
   strPostponed: string | null;
-  intRound: string | null; // week number
+  intRound: string | null;
 };
 
 const LIVE_STATUSES = new Set(["1H", "2H", "HT", "Q1", "Q2", "Q3", "Q4", "IN PROGRESS", "LIVE"]);
@@ -72,8 +77,11 @@ async function getJson(url: string): Promise<ApiEvent[] | null> {
   }
 }
 
-export async function getNflData(season: string): Promise<NflData> {
-  const feeds = await Promise.all(WEEKS.map((w) => getJson(`${BASE}/eventsround.php?id=${LEAGUE}&r=${w}&s=${season}`)));
+export async function getLeagueSchedule(config: LeagueScheduleConfig): Promise<LeagueData> {
+  const { leagueId, season, rounds, roundWord, teamSuffix } = config;
+  const feeds = await Promise.all(
+    rounds.map((r) => getJson(`${BASE}/eventsround.php?id=${leagueId}&r=${r}&s=${season}`)),
+  );
   const failed = feeds.every((f) => f === null);
 
   const byId = new Map<string, ApiEvent>();
@@ -83,20 +91,23 @@ export async function getNflData(season: string): Promise<NflData> {
     .filter((e) => kickoff(e))
     .sort((a, b) => kickoff(a)!.getTime() - kickoff(b)!.getTime());
 
+  const clean = (name: string) =>
+    teamSuffix && name.endsWith(teamSuffix) ? name.slice(0, -teamSuffix.length) : name;
+
   const matches: Match[] = events.map((e) => {
     const d = kickoff(e)!;
     const phase = classify(e);
     return {
       id: e.idEvent,
-      home: e.strHomeTeam,
-      away: e.strAwayTeam,
+      home: clean(e.strHomeTeam),
+      away: clean(e.strAwayTeam),
       homeBadge: e.strHomeTeamBadge,
       awayBadge: e.strAwayTeamBadge,
       homeScore: e.intHomeScore,
       awayScore: e.intAwayScore,
       phase,
       statusLabel: statusLabel(e, phase, d),
-      groupLabel: e.intRound ? `Week ${e.intRound}` : "",
+      groupLabel: e.intRound ? `${roundWord} ${e.intRound}` : "",
       etDateKey: dateKey(d),
       dateHeading: fmt(d, { weekday: "long", month: "long", day: "numeric" }),
     };
@@ -105,7 +116,7 @@ export async function getNflData(season: string): Promise<NflData> {
   const now = Date.now();
   const fixtures: Fixture[] = events
     .filter((e) => kickoff(e)!.getTime() > now)
-    .map((e) => ({ iso: kickoff(e)!.toISOString(), home: e.strHomeTeam, away: e.strAwayTeam }));
+    .map((e) => ({ iso: kickoff(e)!.toISOString(), home: clean(e.strHomeTeam), away: clean(e.strAwayTeam) }));
 
   return {
     failed,

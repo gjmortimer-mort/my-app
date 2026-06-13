@@ -9,16 +9,17 @@ import { IDLE_REFRESH_MS, LIVE_REFRESH_MS } from "../lib/tournamentData";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "NFL 2026 — Schedule & Scores",
-  description: "NFL 2026 schedule and scores, kickoff times in Eastern, refreshed every minute during games.",
+  title: "AFL 2026 — Fixtures & Scores",
+  description: "AFL 2026 fixtures and scores from Australia, kickoff times in Eastern, refreshed every minute during games.",
 };
 
-export default async function NflPage() {
+export default async function AflPage() {
   const { failed, matches, fixtures, updatedLabel, hasLive } = await getLeagueSchedule({
-    leagueId: "4391",
+    leagueId: "4456",
     season: "2026",
-    rounds: Array.from({ length: 18 }, (_, i) => i + 1),
-    roundWord: "Week",
+    rounds: Array.from({ length: 24 }, (_, i) => i + 1),
+    roundWord: "Round",
+    teamSuffix: " Football Club",
   });
 
   return (
@@ -47,9 +48,9 @@ export default async function NflPage() {
         </div>
         <header className="mb-8">
           <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium text-slate-400">
-            NFL 2026 🏈
+            AFL 2026 · Australia 🏉
           </span>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Schedule &amp; scores</h1>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Fixtures &amp; scores</h1>
           <p className="mt-2 text-sm text-slate-400">
             All times {ZONE_LABEL} · updated {updatedLabel} ·{" "}
             {hasLive ? (
@@ -62,13 +63,13 @@ export default async function NflPage() {
 
         {failed ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 text-amber-200">
-            Couldn&apos;t reach the NFL feed right now. It&apos;ll retry automatically — check back shortly.
+            Couldn&apos;t reach the AFL feed right now. It&apos;ll retry automatically — check back shortly.
           </div>
         ) : (
           <Board
             matches={matches}
             views={["today", "all", "results"]}
-            teams={[{ key: "Carolina Panthers", label: "🐾 Panthers" }]}
+            teams={[{ key: "Richmond", label: "🐯 Tigers" }]}
           />
         )}
       </div>
