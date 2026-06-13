@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 };
 
 export default async function TvPage() {
-  const { sports, standings, fixtures, updatedLabel } = await getMultiSportDay();
+  const { sports, fixtures, updatedLabel } = await getMultiSportDay();
   const hasLive = sports.some((s) => s.games.some((g) => g.phase === "live"));
 
   return (
     <>
       {/* refresh fast while a game is live, lazily otherwise */}
       <AutoRefresh intervalMs={hasLive ? LIVE_REFRESH_MS : IDLE_REFRESH_MS} />
-      <TvClient sports={sports} standings={standings} fixtures={fixtures} updatedLabel={updatedLabel} />
+      <TvClient sports={sports} fixtures={fixtures} updatedLabel={updatedLabel} />
     </>
   );
 }
