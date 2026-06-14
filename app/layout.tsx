@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Pacifico } from "next/font/google";
 import NavBar from "./NavBar";
 import "./globals.css";
@@ -20,8 +20,13 @@ const pacifico = Pacifico({
 });
 
 export const metadata: Metadata = {
-  title: "World Cup 2026 — Results & Fixtures",
-  description: "Live World Cup 2026 scores and fixtures, kickoff times in Eastern, refreshed hourly.",
+  title: "Morts Bar on Old Graham",
+  description: "Your home for live sport — World Cup soccer & rugby, cricket, NFL, AFL, NBA, NHL.",
+  appleWebApp: { capable: true, title: "Morts Bar", statusBarStyle: "black-translucent" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#020617",
 };
 
 export default function RootLayout({
