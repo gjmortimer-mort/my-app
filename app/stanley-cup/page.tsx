@@ -89,7 +89,7 @@ export default async function StanleyCupPage() {
               const w = winnerOf(m);
               const played = w !== null;
               return (
-                <div key={m.id} className={`rounded-2xl border p-4 ${played ? "border-slate-800" : "border-red-500/20"} bg-slate-900`}>
+                <div key={m.id} className={`rounded-2xl border p-4 ${m.phase === "live" ? "border-rose-500/50" : played ? "border-slate-800" : "border-red-500/20"} bg-slate-900`}>
                   <div className="mb-2 flex items-center justify-between text-xs">
                     <span className="font-semibold uppercase tracking-wide text-violet-300">Game {i + 1}</span>
                     <span className="text-slate-400">{m.dateHeading}</span>
@@ -114,7 +114,9 @@ export default async function StanleyCupPage() {
                       );
                     })}
                   </div>
-                  <p className="mt-2 text-center text-xs text-slate-500">{played ? "Final" : m.statusLabel}</p>
+                  <p className={`mt-2 text-center text-xs ${m.phase === "live" ? "font-bold uppercase tracking-wider text-rose-400" : "text-slate-500"}`}>
+                    {m.phase === "live" ? `🔴 Live · ${m.statusLabel}` : played ? "Final" : m.statusLabel}
+                  </p>
                 </div>
               );
             })}

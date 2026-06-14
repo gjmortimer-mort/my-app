@@ -52,7 +52,9 @@ export function applyLive<T extends Scorable>(matches: T[], live: Map<string, Li
     const lv = live.get(m.id);
     if (!lv || lv.home == null || lv.away == null) return m;
     const phase = liveStatusToPhase(lv.status);
-    const statusLabel = phase === "live" ? (PRETTY[lv.status.toUpperCase()] ?? "Live") : phase === "final" ? "Final" : m.statusLabel;
+    const u = lv.status.toUpperCase().trim();
+    const statusLabel =
+      phase === "live" ? (PRETTY[u] ?? (u.length <= 4 ? u : "Live")) : phase === "final" ? "Final" : m.statusLabel;
     return { ...m, homeScore: String(lv.home), awayScore: String(lv.away), phase, statusLabel } as T;
   });
 }
