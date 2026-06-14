@@ -18,6 +18,7 @@ export default function SoccerPage() {
         groupWord: "Group",
         rounds: [1, 2, 3],
         pointsScheme: "soccer",
+        sport: "Soccer",
         teams: [
           { key: "South Africa", label: "🇿🇦 South Africa" },
           { key: "Australia", label: "🇦🇺 Australia" },

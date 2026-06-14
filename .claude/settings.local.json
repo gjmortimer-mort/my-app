@@ -73,7 +73,8 @@
       "Bash(sips -s format png -z 192 192 public/morts-logo.png --out public/icon-192.png)",
       "Bash(sips -s format png -z 512 512 public/morts-logo.png --out public/icon-512.png)",
       "Bash(sips -s format png -z 180 180 public/morts-logo.png --out app/apple-icon.png)",
-      "Bash(awk '{print $5, $9}')"
+      "Bash(awk '{print $5, $9}')",
+      "Bash(curl -s --max-time 20 -H 'X-API-KEY: 4358440627' https://www.thesportsdb.com/api/v2/json/livescore/Basketball)"
     ]
   }
 }

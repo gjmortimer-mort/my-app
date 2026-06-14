@@ -20,7 +20,7 @@ const SHORT: Record<string, { short: string; emoji: string }> = {
 };
 
 export default async function StanleyCupPage() {
-  const { matches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({ teamIds: [HURRICANES] });
+  const { matches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({ teamIds: [HURRICANES], sport: "Ice Hockey" });
 
   // Head-to-head games = the Final series, chronological.
   const series = matches.filter((m) => FINALISTS.has(m.home) && FINALISTS.has(m.away));

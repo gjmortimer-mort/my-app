@@ -28,7 +28,7 @@ function winnerOf(m: TeamMatch): TeamName | null {
 }
 
 export default async function NbaFinalsPage() {
-  const { failed, matches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({ teamIds: [SPURS, KNICKS] });
+  const { failed, matches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({ teamIds: [SPURS, KNICKS], sport: "Basketball" });
 
   // Head-to-head games between the two finalists, oldest first.
   const series = matches.filter((m) => isFinalist(m.home) && isFinalist(m.away));

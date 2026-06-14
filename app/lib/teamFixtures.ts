@@ -1,5 +1,6 @@
 import type { TeamMatch } from "../FixturesBoard";
 import type { Fixture } from "../Countdown";
+import { applyLive, getLiveScores } from "./livescores";
 
 import { SPORTSDB_BASE as BASE } from "./sportsdb";
 const TZ = "America/New_York";
@@ -8,6 +9,7 @@ export const ZONE_LABEL = "EST";
 export type TeamFixturesConfig = {
   teamIds: string[]; // national-team ids to pull recent + upcoming events for
   teamSuffix?: string; // e.g. " Rugby" / " Cricket" — stripped from names
+  sport?: string; // TheSportsDB sport name for the live-score overlay (e.g. "Basketball")
 };
 
 export type TeamFixturesData = {
@@ -129,11 +131,13 @@ function cleanResult(raw: string | null): string {
     .filter((e) => kickoff(e)!.getTime() > now)
     .map((e) => ({ iso: kickoff(e)!.toISOString(), home: clean(e.strHomeTeam), away: clean(e.strAwayTeam) }));
 
+  const live = config.sport ? applyLive(matches, await getLiveScores(config.sport)) : matches;
+
   return {
     failed,
-    matches,
+    matches: live,
     fixtures,
     updatedLabel: `${fmt(new Date(), { hour: "numeric", minute: "2-digit", hour12: true })} ${ZONE_LABEL}`,
-    hasLive: matches.some((m) => m.phase === "live"),
+    hasLive: live.some((m) => m.phase === "live"),
   };
 }

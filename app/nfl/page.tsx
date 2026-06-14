@@ -19,6 +19,7 @@ export default async function NflPage() {
     season: "2026",
     rounds: Array.from({ length: 18 }, (_, i) => i + 1),
     roundWord: "Week",
+    sport: "American Football",
   });
 
   return (

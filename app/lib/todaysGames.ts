@@ -43,14 +43,14 @@ export async function getMultiSportDay(): Promise<MultiSportDay> {
   const today = dateKey(new Date());
 
   const [soccer, rugbyWc, nfl, afl, cricket, rugbyIntl, nba, nhl, u20] = await Promise.all([
-    getTournamentData({ leagueId: "4429", season: "2026", groupWord: "Group", rounds: [1, 2, 3], pointsScheme: "soccer" }),
-    getTournamentData({ leagueId: "4574", season: "2027", groupWord: "Pool", rounds: [1, 2, 3], pointsScheme: "rugby", teamSuffix: " Rugby" }),
-    getLeagueSchedule({ leagueId: "4391", season: "2026", rounds: weeks(18), roundWord: "Week" }),
-    getLeagueSchedule({ leagueId: "4456", season: "2026", rounds: weeks(24), roundWord: "Round", teamSuffix: " Football Club" }),
-    getTeamFixtures({ teamIds: CRICKET, teamSuffix: " Cricket" }),
-    getTeamFixtures({ teamIds: TIER1, teamSuffix: " Rugby" }),
-    getTeamFixtures({ teamIds: NBA }),
-    getTeamFixtures({ teamIds: NHL }),
+    getTournamentData({ leagueId: "4429", season: "2026", groupWord: "Group", rounds: [1, 2, 3], pointsScheme: "soccer", sport: "Soccer" }),
+    getTournamentData({ leagueId: "4574", season: "2027", groupWord: "Pool", rounds: [1, 2, 3], pointsScheme: "rugby", teamSuffix: " Rugby", sport: "Rugby" }),
+    getLeagueSchedule({ leagueId: "4391", season: "2026", rounds: weeks(18), roundWord: "Week", sport: "American Football" }),
+    getLeagueSchedule({ leagueId: "4456", season: "2026", rounds: weeks(24), roundWord: "Round", teamSuffix: " Football Club", sport: "Australian Football" }),
+    getTeamFixtures({ teamIds: CRICKET, teamSuffix: " Cricket", sport: "Cricket" }),
+    getTeamFixtures({ teamIds: TIER1, teamSuffix: " Rugby", sport: "Rugby" }),
+    getTeamFixtures({ teamIds: NBA, sport: "Basketball" }),
+    getTeamFixtures({ teamIds: NHL, sport: "Ice Hockey" }),
     getU20Data(),
   ]);
 

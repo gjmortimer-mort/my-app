@@ -19,6 +19,7 @@ export default function RugbyPage() {
         rounds: [1, 2, 3],
         teamSuffix: " Rugby",
         pointsScheme: "rugby",
+        sport: "Rugby",
         pointsNote: "Rugby points: win 4, draw 2 (try/losing bonus points not included).",
         teams: [
           { key: "South Africa", label: "🇿🇦 South Africa" },

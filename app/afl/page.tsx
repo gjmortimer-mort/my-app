@@ -20,6 +20,7 @@ export default async function AflPage() {
     rounds: Array.from({ length: 24 }, (_, i) => i + 1),
     roundWord: "Round",
     teamSuffix: " Football Club",
+    sport: "Australian Football",
   });
 
   return (

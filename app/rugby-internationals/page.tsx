@@ -107,6 +107,7 @@ export default async function RugbyInternationalsPage() {
   const { failed, matches: liveMatches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({
     teamIds: TIER1.map((t) => t.id),
     teamSuffix: " Rugby",
+    sport: "Rugby",
   });
 
   // Reuse the badges the live feed already carries (same style as the rest of

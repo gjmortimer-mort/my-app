@@ -24,6 +24,7 @@ export default async function CricketPage() {
   const { failed, matches, fixtures, updatedLabel, hasLive } = await getTeamFixtures({
     teamIds: CRICKET_TEAMS.map((t) => t.id),
     teamSuffix: " Cricket",
+    sport: "Cricket",
   });
 
   return (

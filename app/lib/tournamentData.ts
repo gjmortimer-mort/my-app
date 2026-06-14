@@ -2,6 +2,7 @@ import type { GroupTable, KnockoutRound, Match, Phase, StandingRow } from "../Bo
 import type { Fixture } from "../Countdown";
 
 import { SPORTSDB_BASE as BASE } from "./sportsdb";
+import { applyLive, getLiveScores } from "./livescores";
 const TZ = "America/New_York";
 export const ZONE_LABEL = "EST";
 
@@ -12,6 +13,7 @@ export type DataConfig = {
   rounds: number[]; // group/pool-stage rounds
   teamSuffix?: string; // stripped from team names for display
   pointsScheme: "soccer" | "rugby"; // 3/1/0 vs 4/2/0
+  sport?: string; // TheSportsDB sport name for the live-score overlay
 };
 
 export type TournamentData = {
@@ -182,7 +184,7 @@ export async function getTournamentData(config: DataConfig): Promise<TournamentD
     };
   };
 
-  const matches = events.map(toMatch);
+  const matches = config.sport ? applyLive(events.map(toMatch), await getLiveScores(config.sport)) : events.map(toMatch);
 
   const fixtures: Fixture[] = events.map((e) => ({
     iso: kickoff(e)!.toISOString(),
