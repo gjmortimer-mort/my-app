@@ -24,33 +24,32 @@ const TILES = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
-      {/* hero */}
-      <div className="relative overflow-hidden border-b border-slate-800">
-        <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-amber-500/10 blur-3xl" />
-        <div className="relative mx-auto max-w-4xl px-6 py-20 text-center sm:py-28">
+      {/* hero — compact banner */}
+      <div className="border-b border-slate-800">
+        <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/morts-logo.png"
             alt="Morts Bar"
-            className="mx-auto h-16 w-16 rounded-full shadow-lg ring-1 ring-white/10 sm:h-20 sm:w-20"
+            className="h-14 w-14 shrink-0 rounded-full shadow-lg ring-1 ring-white/10 sm:h-16 sm:w-16"
           />
-          <h1
-            className="mt-6 text-5xl leading-tight text-amber-300 sm:text-7xl"
-            style={{
-              fontFamily: "var(--font-display)",
-              textShadow: "0 0 12px rgba(251,191,36,0.55), 0 0 32px rgba(251,191,36,0.35)",
-            }}
-          >
-            Morts Bar
-            <span className="block text-2xl text-amber-200/80 sm:text-3xl">on Old Graham</span>
-          </h1>
-          <p className="mt-6 text-lg text-slate-300 sm:text-xl">Your home for live sport. ⚽ 🏉 🏏 🏈</p>
-          <p className="mt-2 text-sm text-slate-500">Pick your game below — scores update live, all night long.</p>
+          <div className="min-w-0">
+            <h1
+              className="text-3xl leading-tight text-amber-300 sm:text-4xl"
+              style={{
+                fontFamily: "var(--font-display)",
+                textShadow: "0 0 10px rgba(251,191,36,0.5), 0 0 24px rgba(251,191,36,0.3)",
+              }}
+            >
+              Morts Bar <span className="text-amber-200/80">on Old Graham</span>
+            </h1>
+            <p className="mt-0.5 text-sm text-slate-400">Your home for live sport — pick your game below. ⚽ 🏉 🏏 🏈</p>
+          </div>
         </div>
       </div>
 
       {/* tiles */}
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {TILES.map((t) => (
             <Link
