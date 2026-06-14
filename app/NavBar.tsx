@@ -34,7 +34,8 @@ const idleCls = "text-slate-400 hover:bg-slate-800 hover:text-white";
 
 export default function NavBar() {
   const pathname = usePathname();
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(null); // desktop dropdown
+  const [mobile, setMobile] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,7 +54,21 @@ export default function NavBar() {
     };
   }, [open]);
 
-  useEffect(() => setOpen(null), [pathname]);
+  useEffect(() => {
+    setOpen(null);
+    setMobile(false);
+  }, [pathname]);
+
+  const link = (i: Item, extra = "") => (
+    <Link
+      key={i.href}
+      href={i.href}
+      aria-current={pathname === i.href ? "page" : undefined}
+      className={`${base} ${pathname === i.href ? activeCls : idleCls} ${extra}`}
+    >
+      {i.label}
+    </Link>
+  );
 
   const Dropdown = ({ id, label, items }: { id: string; label: string; items: Item[] }) => {
     const activeHere = items.some((i) => i.href === pathname);
@@ -74,17 +89,7 @@ export default function NavBar() {
             role="menu"
             className="absolute left-0 top-full z-50 mt-1 flex min-w-[15rem] flex-col gap-0.5 rounded-xl border border-slate-800 bg-slate-900 p-1.5 shadow-xl"
           >
-            {items.map((i) => (
-              <Link
-                key={i.href}
-                href={i.href}
-                role="menuitem"
-                aria-current={pathname === i.href ? "page" : undefined}
-                className={`${base} ${pathname === i.href ? activeCls : idleCls}`}
-              >
-                {i.label}
-              </Link>
-            ))}
+            {items.map((i) => link(i))}
           </div>
         )}
       </div>
@@ -93,33 +98,47 @@ export default function NavBar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/90 backdrop-blur print:hidden">
-      <div ref={ref} className="mx-auto flex max-w-5xl flex-wrap items-center gap-1 px-4 py-2 sm:gap-2 sm:px-6">
+      <div ref={ref} className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-2 sm:px-6">
         <Link
           href="/"
           aria-current={pathname === "/" ? "page" : undefined}
-          className={`${base} mr-1 font-semibold ${pathname === "/" ? activeCls : idleCls}`}
+          className={`${base} font-semibold ${pathname === "/" ? activeCls : idleCls}`}
         >
           🍺 Morts Bar
         </Link>
 
-        <Dropdown id="rugby" label="🏉 Rugby" items={RUGBY} />
-        <Dropdown id="other" label="🏆 Other Sports" items={OTHER} />
+        {/* desktop nav */}
+        <div className="hidden items-center gap-2 md:flex">
+          <Dropdown id="rugby" label="🏉 Rugby" items={RUGBY} />
+          <Dropdown id="other" label="🏆 Other Sports" items={OTHER} />
+          {LINKS.map((l) => link(l))}
+        </div>
 
-        {LINKS.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            aria-current={pathname === l.href ? "page" : undefined}
-            className={`${base} ${pathname === l.href ? activeCls : idleCls}`}
-          >
-            {l.label}
-          </Link>
-        ))}
-
-        <div className="ml-auto">
+        {/* right: weather + mobile toggle */}
+        <div className="ml-auto flex items-center gap-2">
           <BarWeather />
+          <button
+            onClick={() => setMobile((v) => !v)}
+            aria-label="Menu"
+            aria-expanded={mobile}
+            className={`${base} text-lg leading-none md:hidden ${mobile ? activeCls : idleCls}`}
+          >
+            {mobile ? "✕" : "☰"}
+          </button>
         </div>
       </div>
+
+      {/* mobile menu */}
+      {mobile && (
+        <div className="border-t border-slate-800 px-3 py-3 md:hidden">
+          <p className="px-2 pb-1 pt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Rugby</p>
+          <div className="flex flex-col gap-0.5">{RUGBY.map((i) => link(i, "block"))}</div>
+          <p className="px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Other sports</p>
+          <div className="flex flex-col gap-0.5">{OTHER.map((i) => link(i, "block"))}</div>
+          <p className="px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-slate-500">More</p>
+          <div className="flex flex-col gap-0.5">{LINKS.map((i) => link(i, "block"))}</div>
+        </div>
+      )}
     </nav>
   );
 }
