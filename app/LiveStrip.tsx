@@ -15,7 +15,7 @@ type Fix = { iso: string; home: string; away: string };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export default function LiveStrip({ live, fixtures }: { live: StripGame[]; fixtures: Fix[] }) {
+export default function LiveStrip({ live, next }: { live: StripGame[]; next: Fix | null }) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
@@ -23,19 +23,11 @@ export default function LiveStrip({ live, fixtures }: { live: StripGame[]; fixtu
     return () => clearInterval(id);
   }, []);
 
-  const next = useMemo(() => {
-    if (now == null) return null;
-    return (
-      fixtures
-        .map((f) => ({ ...f, t: new Date(f.iso).getTime() }))
-        .filter((f) => !isNaN(f.t) && f.t > now)
-        .sort((a, b) => a.t - b.t)[0] ?? null
-    );
-  }, [fixtures, now]);
+  const nextT = useMemo(() => (next ? new Date(next.iso).getTime() : NaN), [next]);
 
-  let countdown = "";
-  if (now != null && next) {
-    let diff = Math.max(0, Math.floor((next.t - now) / 1000));
+  let countdown = "—";
+  if (now != null && next && !isNaN(nextT)) {
+    let diff = Math.max(0, Math.floor((nextT - now) / 1000));
     const d = Math.floor(diff / 86400);
     diff -= d * 86400;
     const h = Math.floor(diff / 3600);

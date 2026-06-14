@@ -32,6 +32,12 @@ export default async function Home() {
       .filter((g) => g.phase === "live")
       .map((g) => ({ id: g.id, sport: s.sport, emoji: s.emoji, home: g.home, away: g.away, homeScore: g.homeScore, awayScore: g.awayScore })),
   );
+  const nowMs = Date.now();
+  const next =
+    day.fixtures
+      .map((f) => ({ ...f, t: new Date(f.iso).getTime() }))
+      .filter((f) => !isNaN(f.t) && f.t > nowMs)
+      .sort((a, b) => a.t - b.t)[0] ?? null;
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
@@ -59,7 +65,7 @@ export default async function Home() {
         </div>
       </div>
 
-      <LiveStrip live={live} fixtures={day.fixtures} />
+      <LiveStrip live={live} next={next ? { home: next.home, away: next.away, iso: next.iso } : null} />
 
       {/* tiles */}
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
