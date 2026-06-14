@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Footer from "./Footer";
+import LiveStrip, { type StripGame } from "./LiveStrip";
+import { getMultiSportDay } from "./lib/todaysGames";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Morts Bar on Old Graham",
@@ -21,7 +25,14 @@ const TILES = [
   { href: "/socials", emoji: "📸", title: "Socials", desc: "Follow @morts.bar", glow: "from-fuchsia-500/25", ring: "hover:border-fuchsia-500/60" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const day = await getMultiSportDay();
+  const live: StripGame[] = day.sports.flatMap((s) =>
+    s.games
+      .filter((g) => g.phase === "live")
+      .map((g) => ({ id: g.id, sport: s.sport, emoji: s.emoji, home: g.home, away: g.away, homeScore: g.homeScore, awayScore: g.awayScore })),
+  );
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       {/* hero — compact banner */}
@@ -47,6 +58,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <LiveStrip live={live} fixtures={day.fixtures} />
 
       {/* tiles */}
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
